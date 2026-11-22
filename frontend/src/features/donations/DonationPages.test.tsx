@@ -4,11 +4,19 @@ import { MemoryRouter, Route, Routes } from 'react-router'
 import { expect, it, vi } from 'vitest'
 import { LocaleProvider } from '../../app/LocaleProvider'
 import { api, getCsrfCookie } from '../../shared/api/client'
-import { DonateForm, DonationDetail } from './DonationPages'
+import { DonateForm, DonationDetail, DonationHistory } from './DonationPages'
 
 vi.mock('../../shared/api/client', () => ({
   api: { get: vi.fn(), post: vi.fn(), request: vi.fn() }, getCsrfCookie: vi.fn(),
 }))
+
+it('shows confirmed receipts separately from allocations in donor history', async () => {
+  vi.mocked(api.get).mockResolvedValue({ data: { data: [{ id: 'history-item', scope: 'urgent_pool', amount_minor: '2500',
+    payment_status: 'confirmed', allocation_status: 'waiting' }] } })
+  render(<MemoryRouter><LocaleProvider><DonationHistory /></LocaleProvider></MemoryRouter>)
+  expect(await screen.findByText('Confirmé · En attente d’affectation')).toBeVisible()
+  expect(screen.getByRole('link', { name: 'Détail du don' })).toHaveAttribute('href', '/donations/history-item')
+})
 
 it('submits exact minor units with an idempotency key after consent', async () => {
   vi.mocked(api.get).mockResolvedValue({ data: { data: { version: 'mvp-1', simulated: true, terms: { fr: 'Conditions de simulation' } } } })

@@ -251,6 +251,19 @@ class DonationFundingTest extends TestCase
         $this->settlementAction($shopPath, 'confirm', admin: false)->assertNoContent();
         $this->getJson('/api/v1/transparency')->assertJsonPath('data.confirmed_minor', '5000')->assertJsonPath('data.debts_settled', 0);
         $this->settlementAction($shopPath, 'dispute', admin: false)->assertNoContent();
+        $current = DB::table('settlement_response_heads')->where('shop_payment_id', $payment)->value('settlement_action_id');
+        $this->assertDatabaseHas('settlement_actions', ['id' => $current, 'action' => 'dispute']);
+        $dispute = DB::table('settlement_actions')->find($current);
+        DB::table('settlement_actions')->insert([
+            'id' => 'ffffffff-ffff-4fff-8fff-ffffffffffff', 'shop_payment_id' => $payment, 'actor_id' => $owner->id,
+            'action' => 'confirm', 'operation_key' => 'legacy-tied-confirmation', 'request_hash' => str_repeat('a', 64),
+            'created_at' => $dispute->created_at,
+        ]);
+        $migration = require database_path('migrations/2026_11_23_003000_track_current_shop_settlement_response.php');
+        $migration->down();
+        $migration->up();
+        $this->assertDatabaseHas('settlement_response_heads', ['shop_payment_id' => $payment, 'settlement_action_id' => $current]);
+        $this->getJson('/api/v1/transparency')->assertJsonPath('data.confirmed_minor', '0');
         $this->get('/api/v1/admin/finance/journal.csv')->assertForbidden();
         $this->actAs('administrator');
         $this->getJson('/api/v1/admin/settlements?status=dispute')->assertJsonPath('data.0.id', $case->id);

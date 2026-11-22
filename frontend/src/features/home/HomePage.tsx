@@ -21,7 +21,7 @@ export function HomePage() {
   }, [hash])
 
   return <>
-    <section className="container-shell grid items-center gap-9 py-10 md:grid-cols-[1fr_1.06fr] md:gap-10 md:py-16 lg:gap-16">
+    <section className="container-shell grid items-center gap-9 py-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1.06fr)] md:gap-10 md:py-16 lg:gap-16">
       <div>
         <p className="mb-5 text-xs font-bold tracking-[0.16em] text-forest">{t.eyebrow}</p>
         <h1 className="display text-[clamp(2.8rem,5.1vw,5.1rem)] leading-[1.04] tracking-tight">{t.title}

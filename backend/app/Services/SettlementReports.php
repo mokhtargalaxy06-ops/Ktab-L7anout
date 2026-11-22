@@ -10,13 +10,14 @@ class SettlementReports
     public function payments(): Builder
     {
         return DB::table('shop_payments as p')->leftJoin('settlement_transfers as t', 't.shop_payment_id', '=', 'p.id')
+            ->leftJoin('settlement_response_heads as head', 'head.shop_payment_id', '=', 'p.id')
+            ->leftJoin('settlement_actions as response', 'response.id', '=', 'head.settlement_action_id')
             ->select(['p.id', 'p.debt_case_id', 'p.status', 'p.amount_minor', 'p.updated_at', 't.reference'])
-            ->selectSub(DB::table('settlement_actions as response')->select('response.action')
-                ->whereColumn('response.shop_payment_id', 'p.id')->whereIn('response.action', ['confirm', 'dispute'])
-                ->orderByDesc('response.id')->limit(1), 'shop_response')
-            ->selectSub(DB::table('settlement_actions as decision')->select('decision.reason')
-                ->whereColumn('decision.shop_payment_id', 'p.id')->whereIn('decision.action', ['confirm', 'dispute', 'fail'])
-                ->orderByDesc('decision.id')->limit(1), 'reason');
+            ->addSelect('response.action as shop_response')
+            ->selectRaw("CASE WHEN p.status = 'failed' THEN (
+                SELECT decision.reason FROM settlement_actions AS decision
+                WHERE decision.shop_payment_id = p.id AND decision.action = 'fail' LIMIT 1
+            ) ELSE response.reason END AS reason");
     }
 
     public function reconciliation(): Builder

@@ -42,10 +42,14 @@ class ShopSettlement
                 $previous = $payment->status;
                 $this->transition($payment, $case, $actor, $action, $control->frozen);
             }
+            $actionId = (string) Str::uuid7();
             DB::table('settlement_actions')->insert([
-                'id' => (string) Str::uuid7(), 'shop_payment_id' => $paymentId, 'actor_id' => $actor->id,
+                'id' => $actionId, 'shop_payment_id' => $paymentId, 'actor_id' => $actor->id,
                 'action' => $action, 'operation_key' => $key, 'request_hash' => $hash, 'reason' => $reason, 'created_at' => now(),
             ]);
+            if (! $admin) {
+                DB::table('settlement_response_heads')->updateOrInsert(['shop_payment_id' => $paymentId], ['settlement_action_id' => $actionId]);
+            }
             if ($admin) {
                 DB::table('audit_logs')->insert([
                     'id' => (string) Str::uuid7(), 'actor_id' => $actor->id, 'actor_kind' => 'user',
@@ -176,8 +180,9 @@ class ShopSettlement
 
     private function response(string $payment): ?string
     {
-        return DB::table('settlement_actions')->where('shop_payment_id', $payment)
-            ->whereIn('action', ['confirm', 'dispute'])->orderByDesc('id')->value('action');
+        return DB::table('settlement_response_heads as head')
+            ->join('settlement_actions as response', 'response.id', '=', 'head.settlement_action_id')
+            ->where('head.shop_payment_id', $payment)->value('response.action');
     }
 
     private function recover(object $payment, User $actor, bool $frozen): array
