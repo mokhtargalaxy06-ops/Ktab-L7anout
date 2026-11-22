@@ -16,6 +16,8 @@ Use Sanctum first-party session cookies and CSRF protection. Use TLS, secure ses
 
 Use parameterized queries and allowlist sort and filter inputs. Prevent mass assignment with explicit input-to-field mappings. Build API Resources with allowlisted fields per audience. Use React's escaped rendering, avoid raw HTML, deploy a restrictive CSP, and set security headers. Derive prices, balances, roles, and ownership from trusted server data. Keep secrets in environment variables supplied through secure deployment configuration and never commit credentials or .env files.
 
+In Phase 1, login limits apply per source IP and normalized account, and registration uses a separate source-IP limit. The current-account API requires Sanctum and rejects inactive users through shared middleware. The foundation exposes no account suspension or role-change workflow. Revoking every existing session at the time of an administrative change belongs with those workflows.
+
 ## Evidence and privacy
 
 Quarantine uploads under random private object keys. Validate size, extension, detected media type, and malware scan results before marking documents available. Serve authorized downloads using a checked stream or a short-lived signed URL and record access. Use attachment disposition and avoid active inline rendering. Restrict service accounts, database roles, and bucket permissions. Encrypt transport and storage, including backups. Avoid logging credentials, personal data, raw callback bodies, or signed URLs.

@@ -12,6 +12,8 @@ Use JSON under `/api/v1` and HTTPS. Keep Sanctum's CSRF bootstrap at `GET /sanct
 
 ## Endpoints
 
+The foundation exposes `GET /api/health` for liveness and `GET /api/v1/me` for the current active session. `POST /register` accepts name, email, a confirmed password, and locale. It normalizes the email, assigns the donor role, starts a session, and returns a 201 user resource. `POST /login` accepts email and password and returns a 200 user resource. `POST /logout` invalidates the session and returns 204. Fetch the Sanctum CSRF cookie before these mutations. The remaining endpoints and email verification and reset flows are planned.
+
 Paths in the table are relative to `/api/v1`.
 
 | Method and path | Access | Input and behavior |
