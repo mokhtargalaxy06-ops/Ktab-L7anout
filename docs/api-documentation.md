@@ -12,7 +12,21 @@ Use JSON under `/api/v1` and HTTPS. Keep Sanctum's CSRF bootstrap at `GET /sanct
 
 ## Endpoints
 
-The foundation exposes `GET /api/health` for liveness and `GET /api/v1/me` for the current active session. `POST /register` accepts name, email, a confirmed password, and locale. It normalizes the email, assigns the donor role, starts a session, and returns a 201 user resource. `POST /login` accepts email and password and returns a 200 user resource. `POST /logout` invalidates the session and returns 204. Fetch the Sanctum CSRF cookie before these mutations. The remaining endpoints and email verification and reset flows are planned.
+The current release exposes `GET /api/health` for liveness and the following account endpoints. Fetch the Sanctum CSRF cookie before mutations. A user resource includes `id`, `name`, `email`, `locale`, `roles`, `status`, `email_verified`, and `abilities`.
+
+| Method and path | Behavior |
+| --- | --- |
+| `POST /register` | Accepts name, email, password, password confirmation, locale and optional role. Public roles are donor, beneficiary, and shopkeeper. Defaults to donor. Starts a session and returns 201 |
+| `POST /login`, `POST /logout` | Sign in an active account with email and password for a 200 user resource. Logout invalidates the current session and returns 204 |
+| `GET /api/v1/me`, `PATCH /api/v1/me` | Read or update the signed-in active user's profile. The only writable fields are name and locale |
+| `POST /forgot-password` | Accepts email and returns 204 for both known and unknown addresses |
+| `POST /reset-password` | Accepts email, token, password, and password confirmation. A successful one-time reset revokes prior sessions and returns 204 |
+| `POST /api/v1/email/verification-notification` | Resend to the active account's own email. Returns 204 on success |
+| `GET /email/verify/{id}/{hash}` | Follow a time-limited signed link to verify the address and redirect to the frontend |
+| `GET /api/v1/admin/users` | Cursor-paginated account review for verified administrators |
+| `PATCH /api/v1/admin/users/{user}/status` | Verified administrator submits status and their own current password. Admin targets are protected. Status changes revoke prior sessions and emit an audit event. Closed accounts are terminal |
+
+The remaining case, shop, and financial endpoints below describe the planned contract. The listed role abilities do not grant access to a specific future resource without the corresponding ownership or assignment policy.
 
 Paths in the table are relative to `/api/v1`.
 

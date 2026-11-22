@@ -39,6 +39,20 @@ php artisan serve --host=127.0.0.1 --port=8000
 
 The liveness endpoint is `GET http://127.0.0.1:8000/api/health`. It returns `{"data":{"status":"ok"}}`. It checks the HTTP application process.
 
+### Email and administrator setup
+
+Run a local SMTP inbox such as Mailpit before testing registration, verification, and password reset. The example uses SMTP at `127.0.0.1:1025`. Mailpit normally exposes its inbox at `http://127.0.0.1:8025`. If upgrading an earlier checkout, set `MAIL_MAILER=smtp`, `MAIL_HOST=127.0.0.1`, `MAIL_PORT=1025`, and `FRONTEND_URL=http://127.0.0.1:5173` in the existing backend environment. After applying the Phase 2 migrations, sign in again to obtain a versioned session.
+
+Run `php artisan queue:work` from `backend/` in a separate terminal to deliver password reset emails.
+
+Public registration offers donor, beneficiary, and shopkeeper accounts. Provision a new administrator only from a trusted backend console.
+
+```powershell
+php artisan accounts:create-administrator operator@example.test
+```
+
+Enter the name and password at the prompts. The password is read without echo. Complete email verification before using administrator functions. Use an address you control in a deployed environment.
+
 ## Start the frontend
 
 From the repository root in another terminal:

@@ -3,6 +3,7 @@ import { isAxiosError } from 'axios'
 import { useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router'
 import { useSession } from '../features/auth/session'
+import copy, { accountDashboard } from '../features/auth/accountCopy'
 import { api, getCsrfCookie } from '../shared/api/client'
 import { Button, ButtonLink } from '../shared/ui/Button'
 import { useLocale } from './locale'
@@ -55,7 +56,8 @@ export function AppLayout() {
             <Globe2 aria-hidden="true" size={17} /><span lang={locale === 'fr' ? 'ar' : 'fr'}>{locale === 'fr' ? 'العربية' : 'Français'}</span>
           </button>
           {user
-            ? <Button disabled={signingOut} onClick={() => void logout()}>{signingOut ? t.loading : t.logout}</Button>
+            ? <><ButtonLink to={accountDashboard(user.roles)} variant="secondary">{copy[locale].dashboard}</ButtonLink>
+              <Button disabled={signingOut} onClick={() => void logout()}>{signingOut ? t.loading : t.logout}</Button></>
             : <ButtonLink to="/login" variant="secondary">{t.login}</ButtonLink>}
         </div>
       </div>

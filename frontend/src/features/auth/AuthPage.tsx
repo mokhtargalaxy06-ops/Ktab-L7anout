@@ -11,9 +11,11 @@ import { Card } from '../../shared/ui/Card'
 import { Input } from '../../shared/ui/Input'
 import { Loading } from '../../shared/ui/Loading'
 import { useSession, type User } from './session'
+import copy, { accountDashboard, publicRoles } from './accountCopy'
 
 export function AuthPage({ register = false }: { register?: boolean }) {
   const { t, locale } = useLocale()
+  const labels = copy[locale]
   const navigate = useNavigate()
   const { setUser } = useSession()
   const [submissionError, setSubmissionError] = useState('')
@@ -23,6 +25,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
     password: z.string().min(register ? 12 : 1, register ? t.passwordHint : t.required)
       .refine(value => new TextEncoder().encode(value).length <= 72 && !value.includes('\0'), t.invalidPassword),
     password_confirmation: register ? z.string().min(1, t.required) : z.string().optional(),
+    role: z.enum(publicRoles).optional(),
   }).refine(fields => !register || fields.password === fields.password_confirmation, {
     path: ['password_confirmation'], message: t.mismatch,
   })
@@ -34,7 +37,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
       await getCsrfCookie()
       const { data } = await api.post<{ data: User }>(register ? '/register' : '/login', register ? { ...values, locale } : values)
       setUser(data.data)
-      void navigate('/', { replace: true })
+      void navigate(accountDashboard(data.data.roles), { replace: true })
     } catch (error) {
       const response = isAxiosError<ApiError>(error) ? error.response : undefined
       if (response?.status === 422 && response.data?.errors) {
@@ -55,6 +58,12 @@ export function AuthPage({ register = false }: { register?: boolean }) {
       <p className="mb-6 mt-2 text-muted">{register ? t.registerIntro : t.loginIntro}</p>
       <form noValidate onSubmit={event => void handleSubmit(submit)(event)} className="grid gap-4">
         {register && <Input {...field('name')} label={t.name} autoComplete="name" error={errors.name?.message} />}
+        {register && <label className="grid gap-1.5 text-sm font-semibold">
+          {labels.role}
+          <select {...field('role')} defaultValue="donor" className="min-h-12 rounded-lg border border-line bg-white px-3">
+            {publicRoles.map(role => <option key={role} value={role}>{labels[role]}</option>)}
+          </select>
+        </label>}
         <Input {...field('email')} label={t.email} type="email" autoComplete="email" dir="ltr" error={errors.email?.message} />
         <Input {...field('password')} label={t.password} type="password" autoComplete={register ? 'new-password' : 'current-password'}
           hint={register ? t.passwordHint : undefined} error={errors.password?.message} />
@@ -63,6 +72,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
         {submissionError && <p role="alert" className="text-sm text-red-800">{submissionError}</p>}
         <Button type="submit" disabled={isSubmitting}>{isSubmitting ? <Loading label={t.loading} /> : register ? t.register : t.login}</Button>
       </form>
+      {!register && <Link to="/forgot-password" className="mt-4 inline-block text-sm font-semibold text-forest underline">{labels.forgot}</Link>}
       <p className="mt-5 text-sm text-muted">
         {register ? t.hasAccount : t.noAccount}{' '}
         <Link to={register ? '/login' : '/register'} className="font-semibold text-forest underline underline-offset-4">{register ? t.login : t.register}</Link>

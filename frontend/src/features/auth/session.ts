@@ -8,12 +8,15 @@ export interface User {
   locale: Locale
   roles: string[]
   abilities: string[]
+  email_verified?: boolean
 }
 
 export const SessionContext = createContext<{
   user: User | null
   setUser: (user: User | null) => void
-}>({ user: null, setUser: () => {} })
+  ready: boolean
+  refresh: (signal?: AbortSignal) => Promise<void>
+}>({ user: null, setUser: () => {}, ready: false, refresh: async () => {} })
 
 export function useSession() {
   return useContext(SessionContext)

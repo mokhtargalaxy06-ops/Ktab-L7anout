@@ -24,6 +24,8 @@ erDiagram
 
 ## Identity, geography, and verification
 
+Phase 2 adds `users.session_version` (integer, default 1) to invalidate stale sessions after password resets or account status changes. It also introduces `audit_logs` for administrator provisioning, status transitions, and password resets.
+
 | Table | Columns, relationships, and constraints | Additional indexes |
 | --- | --- | --- |
 | `users` | Unique normalized email, password hash, locale `fr\|ar`, status `active\|suspended\|closed`, verification timestamps | Unique normalized email |

@@ -71,4 +71,51 @@ describe('foundation routes', () => {
     expect(await screen.findByRole('link', { name: 'Se connecter' })).toBeVisible()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
+
+  it('redirects guests away from the administrator dashboard', async () => {
+    open('/dashboard/administrator')
+    expect(await screen.findByRole('heading', { name: 'Se connecter' })).toBeVisible()
+    expect(screen.queryByText('Comptes utilisateurs')).not.toBeInTheDocument()
+  })
+
+  it('denies another role access to the administrator dashboard before fetching accounts', async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: { data: { id: 'user', name: 'Test local', email: 'test@example.com', locale: 'fr', roles: ['beneficiary'], abilities: [], email_verified: true } },
+    })
+    open('/dashboard/administrator')
+    expect(await screen.findByRole('heading', { name: 'Vous n’avez pas accès à cet espace.' })).toBeVisible()
+    expect(vi.mocked(api.get).mock.calls.every(([path]) => path === '/api/v1/me')).toBe(true)
+  })
+
+  it('offers only public roles during registration', () => {
+    open('/register')
+    const select = screen.getByRole('combobox', { name: 'Type de compte' })
+    expect(within(select).getAllByRole('option').map(option => option.getAttribute('value')))
+      .toEqual(['donor', 'beneficiary', 'shopkeeper'])
+  })
+
+  it('requests a recovery email and displays a generic confirmation', async () => {
+    vi.mocked(api.post).mockResolvedValue({ status: 204 })
+    const user = userEvent.setup()
+    open('/forgot-password')
+    await user.type(screen.getByLabelText('Adresse e-mail'), 'test@example.com')
+    await user.click(screen.getByRole('button', { name: 'Envoyer le lien' }))
+    expect(await screen.findByRole('status')).toHaveTextContent('Si un compte actif correspond')
+    expect(api.post).toHaveBeenCalledWith('/forgot-password', { email: 'test@example.com' })
+  })
+
+  it('clears the signed-in identity after resetting its password', async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: { data: { id: 'user', name: 'Test local', email: 'test@example.com', locale: 'fr', roles: ['donor'], abilities: [] } },
+    })
+    vi.mocked(api.post).mockResolvedValue({ status: 204 })
+    const user = userEvent.setup()
+    open('/reset-password#token=test-token&email=test%40example.com')
+    expect(await screen.findByRole('button', { name: 'Se déconnecter' })).toBeVisible()
+    await user.type(screen.getByLabelText('Mot de passe', { exact: true }), 'A strong new password')
+    await user.type(screen.getByLabelText('Confirmer le mot de passe'), 'A strong new password')
+    await user.click(screen.getByRole('button', { name: 'Réinitialiser le mot de passe' }))
+    expect(await screen.findByRole('status')).toHaveTextContent('Votre mot de passe est modifié.')
+    expect(screen.queryByRole('button', { name: 'Se déconnecter' })).not.toBeInTheDocument()
+  })
 })

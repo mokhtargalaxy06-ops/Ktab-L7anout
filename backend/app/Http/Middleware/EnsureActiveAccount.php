@@ -11,14 +11,17 @@ class EnsureActiveAccount
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->user()->status !== 'active') {
-            if ($request->hasSession()) {
+        $user = $request->user();
+        $hasSession = $request->hasSession();
+        $inactive = $user->status !== 'active';
+        if ($inactive || ! $hasSession || $request->session()->get('account_version') !== $user->session_version) {
+            if ($hasSession) {
                 Auth::guard('web')->logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
             }
 
-            abort(403);
+            abort($inactive ? 403 : 401);
         }
 
         return $next($request);

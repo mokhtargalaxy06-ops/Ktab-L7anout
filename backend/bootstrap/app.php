@@ -22,9 +22,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->shouldRenderJsonWhen(fn (Request $request) => $request->is('api/*', 'login', 'register', 'logout') || $request->expectsJson());
-        $exceptions->respond(function ($response, Throwable $exception, Request $request) {
-            if (! $request->is('api/*', 'login', 'register', 'logout') || ! $response instanceof JsonResponse || $response->getStatusCode() < 400) {
+        $jsonRoute = fn (Request $request) => $request->is('api/*', 'login', 'register', 'logout', 'forgot-password', 'reset-password');
+        $exceptions->shouldRenderJsonWhen(fn (Request $request) => $jsonRoute($request) || $request->expectsJson());
+        $exceptions->respond(function ($response, Throwable $exception, Request $request) use ($jsonRoute) {
+            if (! $jsonRoute($request) || ! $response instanceof JsonResponse || $response->getStatusCode() < 400) {
                 return $response;
             }
 
@@ -34,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 403 => 'forbidden',
                 404 => 'not_found',
                 405 => 'method_not_allowed',
+                409 => 'conflict',
                 419 => 'csrf_expired',
                 422 => 'validation_failed',
                 429 => 'rate_limited',

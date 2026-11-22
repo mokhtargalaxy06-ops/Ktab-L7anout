@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 class AuthController extends Controller
 {
@@ -19,6 +20,12 @@ class AuthController extends Controller
         $user = $accounts->create($request->validated());
         Auth::guard('web')->login($user);
         $request->session()->regenerate();
+        $request->session()->put('account_version', $user->session_version);
+        try {
+            $user->sendEmailVerificationNotification();
+        } catch (TransportExceptionInterface) {
+            // The user can request another email from their dashboard.
+        }
 
         return UserResource::make($user)->response()->setStatusCode(201)->header('Cache-Control', 'no-store');
     }
@@ -30,6 +37,7 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
+        $request->session()->put('account_version', $request->user()->session_version);
 
         return $this->me($request);
     }

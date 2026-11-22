@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\Access;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -15,7 +16,9 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'locale' => $this->locale,
             'roles' => $this->roles->pluck('code')->sort()->values()->all(),
-            'abilities' => [],
+            'status' => $this->status,
+            'email_verified' => $this->hasVerifiedEmail(),
+            'abilities' => Access::abilities($this->resource),
         ];
     }
 }

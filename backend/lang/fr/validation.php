@@ -6,6 +6,7 @@ return [
     'email' => 'Saisissez une adresse e-mail valide.',
     'unique' => 'Cette valeur est déjà utilisée.',
     'confirmed' => 'La confirmation ne correspond pas.',
+    'current_password' => 'Le mot de passe actuel est incorrect.',
     'in' => 'La valeur sélectionnée est invalide.',
     'min' => ['string' => 'Ce champ doit contenir au moins :min caractères.'],
     'max' => ['string' => 'Ce champ doit contenir au maximum :max caractères.'],

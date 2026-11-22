@@ -56,7 +56,8 @@ class FoundationTest extends TestCase
     {
         $user = User::factory()->create();
         $this->postJson('/login', ['email' => $user->email, 'password' => 'password'])->assertOk();
-        $this->getJson('/api/v1/me')->assertOk()->assertJsonPath('data.id', $user->id);
+        config(['sanctum.stateful' => ['127.0.0.1:5173']]);
+        $this->getJson('/api/v1/me', ['Origin' => 'http://127.0.0.1:5173'])->assertOk()->assertJsonPath('data.id', $user->id);
         $this->postJson('/logout')->assertNoContent();
         $this->assertGuest('web');
     }
