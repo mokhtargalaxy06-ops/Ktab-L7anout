@@ -4,6 +4,7 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DebtApplicationController;
 use App\Http\Controllers\GeographyController;
+use App\Http\Controllers\PublicDiscoveryController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\VerificationController;
 use App\Http\Middleware\EnsureActiveAccount;
@@ -14,7 +15,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/health', fn () => response()->json(['data' => ['status' => 'ok']])->header('Cache-Control', 'no-store'));
 $geographyLevels = ['regions', 'cities', 'localities'];
 Route::get('/v1/{level}', [GeographyController::class, 'publicIndex'])->whereIn('level', $geographyLevels);
-Route::get('/v1/cases', [DebtApplicationController::class, 'index'])->defaults('audience', 'public');
+Route::get('/v1/cases', [PublicDiscoveryController::class, 'index']);
+Route::get('/v1/cases/{reference}', [PublicDiscoveryController::class, 'show'])->whereUuid('reference');
+Route::get('/v1/discovery', [PublicDiscoveryController::class, 'home']);
 Route::prefix('v1')->middleware(['auth:sanctum', EnsureActiveAccount::class])->group(function () use ($geographyLevels) {
     Route::get('/me', [AuthController::class, 'me']);
     Route::patch('/me', [AccountController::class, 'update']);
@@ -54,6 +57,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', EnsureActiveAccount::class])->g
     Route::post('/shop/cases/{case}/verification', [DebtApplicationController::class, 'verify'])->whereUuid('case')->can('assigned', 'case');
     Route::get('/admin/cases', [DebtApplicationController::class, 'index'])->defaults('audience', 'admin')->can('review', DebtCase::class);
     Route::post('/admin/cases/{case}/review', [DebtApplicationController::class, 'review'])->whereUuid('case')->can('review', DebtCase::class);
+    Route::post('/admin/cases/{case}/discovery', [PublicDiscoveryController::class, 'review'])->whereUuid('case')->can('review', DebtCase::class);
     foreach (['beneficiary', 'shop', 'admin'] as $audience) {
         Route::get("/$audience/cases/{case}", [DebtApplicationController::class, 'show'])->whereUuid('case')->defaults('audience', $audience);
         Route::get("/$audience/cases/{case}/documents/{document}", [DebtApplicationController::class, 'download'])

@@ -2,9 +2,9 @@ import { useLocale } from '../../app/locale'
 import copy from './copy'
 import { selectClass, useResource, type Collection, type Locations, type Place } from './shopApi'
 
-type Props = { value: Locations; onChange: (value: Locations) => void; through?: 'region' | 'city' | 'locality'; admin?: boolean; revision?: number }
+type Props = { value: Locations; onChange: (value: Locations) => void; through?: 'region' | 'city' | 'locality'; admin?: boolean; revision?: number; required?: boolean }
 
-export function GeographySelect({ value, onChange, through = 'locality', admin = false, revision = 0 }: Props) {
+export function GeographySelect({ value, onChange, through = 'locality', admin = false, revision = 0, required = true }: Props) {
   const { locale, t } = useLocale()
   const text = copy[locale]
   const prefix = admin ? '/api/v1/admin/geography/' : '/api/v1/'
@@ -14,14 +14,14 @@ export function GeographySelect({ value, onChange, through = 'locality', admin =
 
   return <div className="grid gap-3 sm:grid-cols-2">
     <label className="grid gap-1 text-sm font-semibold">{text.region}
-      <select required className={selectClass} value={value.region_id}
+      <select required={required} className={selectClass} value={value.region_id}
         onChange={event => onChange({ region_id: event.target.value, city_id: '', locality_id: null })}>
         <option value="">{text.choose}</option>
         {regions?.data?.data.map(place => <option key={place.id} value={place.id}>{place[locale === 'ar' ? 'name_ar' : 'name_fr']}</option>)}
       </select>
     </label>
     {through !== 'region' && <label className="grid gap-1 text-sm font-semibold">{text.city}
-      <select required className={selectClass} disabled={!value.region_id || !cities?.data} value={value.city_id}
+      <select required={required} className={selectClass} disabled={!value.region_id || !cities?.data} value={value.city_id}
         onChange={event => onChange({ ...value, city_id: event.target.value, locality_id: null })}>
         <option value="">{text.choose}</option>
         {cities?.data?.data.map(place => <option key={place.id} value={place.id}>{place[locale === 'ar' ? 'name_ar' : 'name_fr']}</option>)}

@@ -5,11 +5,14 @@ import { useLocale } from '../../app/locale'
 import { useSession } from '../auth/session'
 import { ButtonLink } from '../../shared/ui/Button'
 import { Card } from '../../shared/ui/Card'
+import { HomeDiscovery } from '../discovery/HomeDiscovery'
+import { discoveryCopy } from '../discovery/copy'
 
 const stepIcons = [ClipboardCheck, ShieldCheck, HandCoins]
 
 export function HomePage() {
-  const { t } = useLocale()
+  const { locale, t } = useLocale()
+  const text = discoveryCopy[locale]
   const { user } = useSession()
   const { hash } = useLocation()
 
@@ -26,14 +29,15 @@ export function HomePage() {
         </h1>
         <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">{t.intro}</p>
         <div className="mt-7 flex flex-wrap gap-3">
-          {!user && <ButtonLink to="/register">{t.register}</ButtonLink>}
-          <ButtonLink to="/#approche" variant="secondary">{t.approach}</ButtonLink>
+          <ButtonLink to="/cases">{text.browse}</ButtonLink>
+          <ButtonLink to="/urgent" variant="secondary">{text.urgentTitle}</ButtonLink>
         </div>
         <p className="mt-5 text-sm text-muted">{t.note}</p>
       </div>
       <img src="/hanout.jpg" alt={t.photo} width="1448" height="1086" fetchPriority="high"
         className="aspect-[4/3] h-full max-h-[520px] w-full rounded-3xl object-cover shadow-[0_18px_48px_-28px_#1b3e2d60]" />
     </section>
+    <HomeDiscovery />
     <section id="approche" aria-labelledby="approche-title" className="scroll-mt-5 border-t border-line bg-surface py-12 md:py-16">
       <div className="container-shell">
         <div className="mb-8 text-center">
@@ -49,6 +53,16 @@ export function HomePage() {
               <p className="mt-2 leading-relaxed text-muted">{description}</p>
             </Card>
           })}
+        </div>
+      </div>
+    </section>
+    <section className="container-shell py-10 md:py-14">
+      <div className="grid gap-4 rounded-3xl bg-forest-dark p-6 text-white sm:p-10">
+        <h2 className="display text-3xl sm:text-4xl">{text.transparency}</h2>
+        <p className="max-w-2xl leading-relaxed text-white/85">{text.transparencyText}</p>
+        <div className="flex flex-wrap gap-3">
+          <ButtonLink variant="secondary" to="/cases">{text.browse}</ButtonLink>
+          {!user && <ButtonLink variant="secondary" to="/register">{t.register}</ButtonLink>}
         </div>
       </div>
     </section>

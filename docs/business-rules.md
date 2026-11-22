@@ -39,6 +39,10 @@ For the urgent pool, select eligible cases in score order and allocate the lesse
 
 ## Urgency scoring
 
+Phase 5 enables donor discovery using `config/discovery.php`. Open cases with both current reviewer grades and a score of at least 60/100 are urgent by default. The threshold, weights, and normalization caps are configurable. Published cases without grades remain discoverable in the general catalog. Public story templates are selected by reviewers. Internal descriptions, grades, and review reasons stay private.
+
+Homepage statistics come from settlement, allocation, and confirmed receipt reporting projections. Families helped counts distinct beneficiary profiles with an evidenced settlement greater than zero. Historical impact is independent of whether a case is still listed publicly. Unfunded cases have zero funding progress and remain open. Fully allocated cases are funded, and cases fully settled with the shop are settled.
+
 Only cases already eligible by human review enter the queue. Use the following normalization thresholds as the confirmed simulated MVP baseline and publish them as a versioned policy. Store the actor and rationale for assessed grades. Review cases missing essential assessments manually and make the queue delay visible to operators.
 
 | Component | Weight | Proposed normalization to 0–10,000 |

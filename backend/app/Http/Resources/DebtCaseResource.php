@@ -14,14 +14,6 @@ class DebtCaseResource extends JsonResource
 
     public function toArray(Request $request): array
     {
-        $public = $this->audience === 'public';
-        if ($public) {
-            return [
-                'id' => $this->id, 'region' => $this->city->region->only(['name_fr', 'name_ar']),
-                'amount_minor' => (string) $this->approved_minor, 'currency' => 'MAD',
-            ];
-        }
-
         $shop = $this->audience === 'shop';
         $admin = $this->audience === 'admin';
         $data = [
@@ -38,6 +30,9 @@ class DebtCaseResource extends JsonResource
         }
         if ($admin) {
             $data['flagged'] = $this->flagged;
+            $data['public_story'] = $this->public_story;
+            $data['vulnerability_grade'] = $this->vulnerability_grade;
+            $data['access_risk_grade'] = $this->access_risk_grade;
             $data['duplicate_count'] = $this->duplicate_count;
             $data['duplicates'] = $this->duplicates;
         }

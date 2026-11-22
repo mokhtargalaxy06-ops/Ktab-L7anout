@@ -10,14 +10,18 @@ import { GeographySelect } from '../shops/GeographySelect'
 import { PageControls } from '../shops/ShopDashboard'
 import { selectClass, useResource, withCursor, write, type Collection, type Locations } from '../shops/shopApi'
 import { caseCopy, type Action, type CaseStatus } from './copy'
+import { DiscoveryAssessment } from '../discovery/DiscoveryAssessment'
+import { discoveryCopy } from '../discovery/copy'
+import type { Story } from '../discovery/types'
 
 type Audience = 'beneficiary' | 'shop' | 'admin'
 type Evidence = { id: string; media_type: string; status: 'available' | 'quarantined' | 'rejected'; revision: number }
-type Entry = { action: Action; reason?: string; amount_minor?: string | null; created_at: string; revision: number }
+type Entry = { action: Action | 'public_assessed'; reason?: string; amount_minor?: string | null; created_at: string; revision: number }
 type Debt = Locations & {
   id: string; status: CaseStatus; revision: number; shop_id: string; shop_name: string; debt_reference: string; debt_date: string
   amount_minor: string; situation?: string; household_size?: number; flagged?: boolean; duplicate_count?: number
   duplicates?: Pick<Debt, 'id' | 'debt_reference' | 'status'>[]
+  public_story?: Story; vulnerability_grade?: number | null; access_risk_grade?: number | null
   documents?: Evidence[]; history?: Entry[]
 }
 
@@ -135,6 +139,9 @@ function Tracking({ record, audience, base, saved, open }: { record: Debt; audie
       </div>)}
     </Card>
     {ownerDraft && <DraftForm record={record} saved={saved} />}
+    {audience === 'admin' && ['under_review', 'approved', 'published'].includes(record.status) && <DiscoveryAssessment
+      id={record.id} revision={record.revision} story={record.public_story} vulnerability={record.vulnerability_grade}
+      risk={record.access_risk_grade} reasonLabel={text.reason} />}
     <Card className="grid gap-2 p-5">
       <h3 className="font-bold">{text.evidence}</h3>
       {record.documents?.map(file => <div key={file.id} className="flex flex-wrap items-center gap-2">
@@ -183,7 +190,7 @@ function Tracking({ record, audience, base, saved, open }: { record: Debt; audie
     {error && <p role="alert" className="text-red-800">{error}</p>}
     <Card className="p-5">
       <h3 className="mb-2 font-bold">{text.history}</h3>
-      {record.history?.map((entry, index) => <p key={index}>{text.actions[entry.action]} · {new Date(entry.created_at).toLocaleDateString(locale === 'ar' ? 'ar-MA' : 'fr-MA')}
+      {record.history?.map((entry, index) => <p key={index}>{entry.action === 'public_assessed' ? discoveryCopy[locale].assessment : text.actions[entry.action]} · {new Date(entry.created_at).toLocaleDateString(locale === 'ar' ? 'ar-MA' : 'fr-MA')}
         {entry.amount_minor && <> · {text.amount} <bdi>{entry.amount_minor}</bdi></>}{entry.reason && <> · {entry.reason}</>}</p>)}
     </Card>
   </div>

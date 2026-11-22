@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { isAxiosError } from 'axios'
 import { api, getCsrfCookie } from '../../shared/api/client'
 
 export type Place = { id: string; code: string; name_fr: string; name_ar: string; active: boolean; source_url: string; source_date: string }
@@ -16,13 +17,15 @@ export type Collection<T> = { data: T[]; meta?: { next_cursor: string | null; pr
 export const selectClass = 'min-h-11 w-full rounded-lg border border-line bg-white px-3 text-ink disabled:opacity-60'
 
 export function useResource<T>(path: string | null, revision = 0) {
-  const [result, setResult] = useState<{ path: string; revision: number; data?: T; failed?: boolean }>()
+  const [result, setResult] = useState<{ path: string; revision: number; data?: T; failed?: boolean; status?: number }>()
   useEffect(() => {
     if (!path) return
     const controller = new AbortController()
     void api.get<T>(path, { signal: controller.signal })
       .then(response => { if (!controller.signal.aborted) setResult({ path, revision, data: response.data }) })
-      .catch(() => { if (!controller.signal.aborted) setResult({ path, revision, failed: true }) })
+      .catch(error => { if (!controller.signal.aborted) setResult({
+        path, revision, failed: true, status: isAxiosError(error) ? error.response?.status : undefined,
+      }) })
     return () => controller.abort()
   }, [path, revision])
   return result?.path === path && result.revision === revision ? result : undefined

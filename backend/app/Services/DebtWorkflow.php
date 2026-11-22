@@ -15,6 +15,29 @@ use Throwable;
 
 class DebtWorkflow
 {
+    public function assessDiscovery(User $actor, DebtCase $case, array $assessment): void
+    {
+        DB::transaction(function () use ($actor, $case, $assessment) {
+            $case = DebtCase::lockForUpdate()->findOrFail($case->id);
+            Gate::forUser($actor)->authorize('review', DebtCase::class);
+            abort_if($case->profile->user_id === $actor->id, 403);
+            abort_unless((int) $assessment['revision'] === $case->revision
+                && in_array($case->status, ['under_review', 'approved', 'published'], true), 409);
+
+            $grades = [
+                'public_story' => $assessment['story'],
+                'vulnerability_grade' => (int) $assessment['vulnerability'],
+                'access_risk_grade' => (int) $assessment['access_risk'],
+            ];
+            $case->forceFill($grades)->save();
+            $case->history()->create([
+                'actor_id' => $actor->id, 'audience' => 'admin', 'action' => 'public_assessed',
+                'revision' => $case->revision, 'reason' => $assessment['reason'], 'created_at' => now(),
+            ]);
+            $this->audit($actor, $case, 'case.public_assessed', $grades + ['revision' => $case->revision]);
+        });
+    }
+
     public function save(User $actor, ?DebtCase $case, array $input): DebtCase
     {
         return DB::transaction(function () use ($actor, $case, $input) {
@@ -114,6 +137,7 @@ class DebtWorkflow
             $case->forceFill([
                 'revision' => $case->revision + 1, 'verified_shop_revision' => null,
                 'approved_minor' => null, 'consent_version' => null, 'consented_at' => null,
+                'public_story' => 'essentials', 'vulnerability_grade' => null, 'access_risk_grade' => null,
             ]);
         }
         if (in_array($action, ['flag', 'clear_flag'], true)) {

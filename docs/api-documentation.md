@@ -46,7 +46,10 @@ Shop and debt inbox lists are cursor-paginated. Debt application submission and 
 
 | Path under `/api/v1` | Behavior |
 | --- | --- |
-| `GET /cases` | Public cursor-paginated catalog. Returns only case ID, region names, approved amount in MAD minor units, and currency |
+| `GET /cases` | Public catalog, 12 cases per numbered page. Filters are `q` (public UUID, region or city names), `region_id`, `city_id`, `min_minor`, `max_minor`, `urgent=1`, `status=open\|funded\|settled`, and `page`. Returns public identifiers, bilingual city and region names, story key, verification and funding data |
+| `GET /cases/{reference}` | Public detail by anonymous UUID. Adds dated, allowlisted verification and funding updates without private review notes |
+| `GET /discovery` | Homepage totals, up to three recently published and three urgent cases, and active urgency settings |
+| `POST /admin/cases/{case}/discovery` | Verified reviewer selects a predefined story, records vulnerability and access-risk grades between zero and four, and submits a case revision and internal rationale. The public API omits both grades and rationale |
 | `GET /beneficiary/shops?city_id=…` | List selectable verified shops by city for an eligible beneficiary |
 | `GET, POST /beneficiary/cases`, `GET, PATCH /beneficiary/cases/{case}` | Owner list and detail, create or edit a draft. Supply city, shop, debt reference/date, amount string, situation, and optional household size |
 | `POST /beneficiary/cases/{case}/submit`, `POST /beneficiary/cases/{case}/cancel` | Submit with scanned current evidence and `consent: true`, `consent_version: "1"`, or cancel an eligible case |
@@ -63,7 +66,6 @@ Paths in the table are relative to `/api/v1`.
 | `GET /me` | Signed-in user | Own account, locale, roles, and UI abilities |
 | `GET /regions`, `GET /cities`, `GET /localities` | Public | Localized reference data, with parent filters on cities and localities |
 | `GET /donation-policies/current` | Public | Published policy version, excess and pool handling, and localized text |
-| `GET /cases`, `GET /cases/{id}` | Public | Published and redacted cases from verified shops, with region/city filters for the collection. Show cap, available capacity, and settled total |
 | `GET /beneficiary/profile`, `PUT /beneficiary/profile` | Beneficiary | Own profile. Upsert approved profile fields |
 | `GET /beneficiary/shops` | Beneficiary | Search verified shops by locality using public display fields |
 | `GET /beneficiary/cases`, `POST /beneficiary/cases` | Beneficiary | Own case list and draft creation. Supply shop ID, debt reference, and origination date |

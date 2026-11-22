@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\City;
+use App\Models\DebtCase;
 use App\Models\DebtDocument;
 use App\Models\Region;
 use App\Models\Role;
@@ -84,10 +85,10 @@ class DebtApplicationTest extends TestCase
         $this->review($id, 'approve')->assertOk()->assertJsonPath('data.status', 'approved');
         $this->getJson('/api/v1/cases')->assertJsonCount(0, 'data');
         $this->review($id, 'publish')->assertOk()->assertJsonPath('data.status', 'published');
-        $this->getJson('/api/v1/cases')->assertExactJson([
-            'data' => [['id' => $id, 'region' => ['name_fr' => 'Fixture', 'name_ar' => 'اختبار'], 'amount_minor' => '25000', 'currency' => 'MAD']],
-            'meta' => ['next_cursor' => null, 'prev_cursor' => null],
-        ]);
+        $this->getJson('/api/v1/cases')->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', DebtCase::findOrFail($id)->public_reference)
+            ->assertJsonPath('data.0.amount_minor', '25000')
+            ->assertJsonMissingPath('data.0.situation')->assertJsonMissingPath('data.0.debt_reference');
         $this->assertDatabaseHas('audit_logs', ['target_id' => $id, 'action' => 'case.publish']);
         $this->shop->forceFill(['status' => 'suspended'])->save();
         $this->getJson('/api/v1/cases')->assertJsonCount(0, 'data');

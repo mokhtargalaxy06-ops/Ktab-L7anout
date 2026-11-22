@@ -24,10 +24,14 @@ it('opens an application from the beneficiary tracking list', async () => {
 })
 
 it('renders an approved amount and region in the public catalog', async () => {
-  vi.mocked(api.get).mockResolvedValue({
-    data: { data: [{ id: 'case-1', region: { name_fr: 'Rabat-Salé-Kénitra', name_ar: 'الرباط' }, amount_minor: '25000', currency: 'MAD' }] },
-  })
-  render(<LocaleProvider><PublicCases /></LocaleProvider>)
-  expect(await screen.findByRole('heading', { name: 'Rabat-Salé-Kénitra' })).toBeVisible()
-  expect(screen.getByText(/MAD/)).toBeVisible()
+  vi.mocked(api.get).mockImplementation(async path => ({
+    data: { data: path.startsWith('/api/v1/cases') ? [{
+      id: 'case-1', region: { name_fr: 'Rabat-Salé-Kénitra', name_ar: 'الرباط' },
+      city: { name_fr: 'Rabat', name_ar: 'الرباط' }, amount_minor: '25000', collected_minor: '5000', progress: 20,
+    }] : [], meta: { page: 1, last_page: 1, total: 1 } },
+  }))
+  render(<MemoryRouter><LocaleProvider><PublicCases /></LocaleProvider></MemoryRouter>)
+  expect(await screen.findByRole('heading', { name: 'Rabat' })).toBeVisible()
+  expect(screen.getByText('Rabat-Salé-Kénitra')).toBeVisible()
+  expect(screen.getByRole('progressbar')).toHaveAttribute('value', '20')
 })

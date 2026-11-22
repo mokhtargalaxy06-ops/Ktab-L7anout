@@ -51,6 +51,10 @@ Phase 4 implements application-specific amounts, household size and situation, v
 
 ## Financial records
 
+Phase 5 adds read-side projections `case_funding_reports` (case FK and primary key, net allocated and evidenced settled minor units, update time) and `funding_receipt_reports` (receipt UUID key and confirmed received minor units). The public API has no projection write path. These tables start empty and will be populated by the planned financial ledger workflows. They are separate from the immutable financial journal.
+
+Cases have a unique random public reference independent of their internal ID, a public story key, and two optional reviewer grades. Each public assessment audit event records the story, grades, and case revision. Reopening a case for information clears its public story selection and grades. Public reads accept only reports with a positive approved cap and `0 ≤ settled ≤ allocated ≤ approved`. An inconsistent report is excluded from impact totals and its case from discovery until the report is corrected.
+
 | Table | Columns, relationships, and constraints | Additional indexes |
 | --- | --- | --- |
 | `donation_policies` | Unique version, effective time, publisher user FK, French and Arabic disclosed text, pool holding period and disposition rules. Immutable after publication | `(effective_at, version)` |

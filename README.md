@@ -60,6 +60,8 @@ See the [official geography sources and coverage](docs/geography-data.md). Shop 
 
 For beneficiary and shop evidence on debt applications, run `php artisan shops:scan-documents --cases`. A beneficiary needs scanned evidence before submitting an application. Reviewers route it to the shop and can publish only after the assigned shop owner confirms the amount and an administrator approves it.
 
+The public discovery pages are `/cases` and `/urgent`. Reviewers can set an anonymized story and urgency grades from the administrator case dashboard. Configure the urgency weights, normalization caps, and threshold in `backend/config/discovery.php`. The homepage displays database reporting totals, which start at zero and depend on future financial workflows to populate them.
+
 ## Start the frontend
 
 From the repository root in another terminal:

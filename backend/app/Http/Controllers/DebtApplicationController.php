@@ -27,8 +27,6 @@ class DebtApplicationController extends Controller
                 ->whereHas('shop', fn ($shop) => $shop->where('status', 'verified')->whereHas('owners', fn ($owner) => $owner->whereKey($request->user()->id)))
                 ->whereHas('profile', fn ($profile) => $profile->where('user_id', '!=', $request->user()->id)),
             'admin' => $query->where('status', '!=', 'draft'),
-            'public' => $query->where('status', 'published')->whereNotNull('published_at')->whereNotNull('approved_minor')
-                ->whereHas('shop', fn ($shop) => $shop->where('status', 'verified')->whereColumn('shops.revision', 'debt_cases.verified_shop_revision')),
         };
         $cases = $query->orderByDesc('id')->cursorPaginate(25);
 
@@ -141,7 +139,7 @@ class DebtApplicationController extends Controller
             ->when($audience !== 'admin', fn ($query) => $query->where('audience', $audience))->orderBy('id'),
             'history' => fn ($query) => $query
                 ->when($audience === 'shop', fn ($query) => $query->where('audience', 'shop'))
-                ->when($audience === 'beneficiary', fn ($query) => $query->whereNotIn('action', ['flag', 'clear_flag']))->orderBy('id'),
+                ->when($audience === 'beneficiary', fn ($query) => $query->whereNotIn('action', ['flag', 'clear_flag', 'public_assessed']))->orderBy('id'),
         ]);
         if ($audience === 'admin') {
             $duplicates = DebtCase::whereKeyNot($case->id)->where('shop_id', $case->shop_id)
