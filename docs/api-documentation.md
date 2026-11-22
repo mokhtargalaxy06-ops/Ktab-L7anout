@@ -40,7 +40,21 @@ The current release exposes `GET /api/health` for liveness and the following acc
 | `POST /api/v1/admin/shops/{shop}/debt-requests` | Administrator submits reference and integer-string `amount_minor` for a verified shop |
 | `POST /api/v1/shop/shops/{shop}/debt-requests/{debt}/decision` | Owner of a verified shop confirms the stated amount or disputes it with a reason |
 
-Shop and debt inbox lists are cursor-paginated. The remaining case and financial endpoints below describe the planned contract. Future resource policies must enforce ownership or assignment.
+Shop and debt inbox lists are cursor-paginated. Debt application submission and multipart evidence uploads require the displayed case revision. Stale revisions return 409.
+
+### Debt applications
+
+| Path under `/api/v1` | Behavior |
+| --- | --- |
+| `GET /cases` | Public cursor-paginated catalog. Returns only case ID, region names, approved amount in MAD minor units, and currency |
+| `GET /beneficiary/shops?city_id=…` | List selectable verified shops by city for an eligible beneficiary |
+| `GET, POST /beneficiary/cases`, `GET, PATCH /beneficiary/cases/{case}` | Owner list and detail, create or edit a draft. Supply city, shop, debt reference/date, amount string, situation, and optional household size |
+| `POST /beneficiary/cases/{case}/submit`, `POST /beneficiary/cases/{case}/cancel` | Submit with scanned current evidence and `consent: true`, `consent_version: "1"`, or cancel an eligible case |
+| `GET /shop/cases`, `GET /shop/cases/{case}`, `POST /shop/cases/{case}/verification` | Assigned verified-shop owners see limited data. Post current revision and decision `confirm`, `dispute`, or `reject`, with confirmed amount or appropriate reason |
+| `GET /admin/cases`, `GET /admin/cases/{case}`, `POST /admin/cases/{case}/review` | Review submitted cases and history. Post current revision and decision `route`, `approve`, `reject`, `request_info`, `flag`, `clear_flag`, or `publish` |
+| `POST /{audience}/cases/{case}/documents`, `GET /{audience}/cases/{case}/documents/{document}` | Multipart uploads for beneficiary drafts or shop verification. Clean attachments only. Beneficiaries and shopkeepers access evidence from their own audience. Administrators can download both audiences after submission |
+
+The remaining case and financial endpoints below describe the planned contract.
 
 Paths in the table are relative to `/api/v1`.
 

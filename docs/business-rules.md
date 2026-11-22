@@ -12,18 +12,20 @@ An administrator can send a verified shop a debt reference and an exact amount i
 stateDiagram-v2
     [*] --> draft
     draft --> submitted
-    submitted --> shop_confirmed
-    submitted --> paused: Shop dispute
-    shop_confirmed --> approved
-    shop_confirmed --> rejected
+    submitted --> pending_verification: Administrator routes
+    pending_verification --> under_review: Shop confirms
+    pending_verification --> disputed: Shop disputes or declines
+    under_review --> approved: Administrator approves
+    disputed --> draft: Information requested
+    under_review --> draft: Information requested
+    under_review --> rejected
     approved --> published
-    published --> paused
-    paused --> submitted: Reverify
-    published --> closed: Fully settled
-    paused --> closed: Reviewed closure
+    draft --> cancelled
 ```
 
-A beneficiary submits their own case with evidence. An active member of the named shop confirms the debt reference, date, and eligible unpaid grocery balance. An administrator reviews the evidence and shop's verified status, sets the approved cap, records the decision, and reviews the redacted summary before publishing. A rejection requires a human decision and reason. Shop disputes pause intake for review.
+A beneficiary submits their own draft with current scanned evidence and affirmative acceptance of the versioned consent terms. An administrator routes the submitted case to the verified shop. Its assigned owner confirms the exact submitted amount or disputes or declines with a reason. A beneficiary cannot verify or administratively act on their own application, even with another role. Shopkeepers can add separate supporting documents.
+
+An administrator can request information, reject with a reason, or flag a submitted, pending, disputed, under-review, or approved case. Requesting information returns it to a private draft and invalidates the prior consent, evidence revision, and verification. A beneficiary can cancel a draft, submitted, pending, under-review, or disputed case. A flagged case cannot be approved or published until the flag is cleared with a reason. Approval sets the cap to the confirmed amount and requires the same verified shop revision. Publication is a separate decision with the same checks. Only one approval or publication may exist for a normalized reference at a shop. Other duplicate indicators are for human review. A changed or suspended shop drops its published case from the public catalog.
 
 Only published cases at verified shops with positive capacity receive allocations. Published cases with zero capacity can show funding or settlement progress. A pause blocks new allocations and payout submission, while already submitted operations must be reconciled. A verified shop suspension has the same effect for its cases. If an external debt payment or correction changes the cap, pause, reconcile in-flight payments, and release unspent allocations as needed before applying the new cap. If the proposed cap falls below the settled amount, open a reconciliation case and preserve the original settlement record. Record all decisions and reasons. Close a fully settled case after confirmed shop payments reach the cap. Reviewed closure releases remaining unspent funding subject to pending payout reconciliation.
 

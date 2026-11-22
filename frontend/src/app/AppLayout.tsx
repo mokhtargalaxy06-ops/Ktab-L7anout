@@ -3,6 +3,7 @@ import { isAxiosError } from 'axios'
 import { useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router'
 import { useSession } from '../features/auth/session'
+import { caseCopy } from '../features/cases/copy'
 import copy, { accountDashboard } from '../features/auth/accountCopy'
 import { api, getCsrfCookie } from '../shared/api/client'
 import { Button, ButtonLink } from '../shared/ui/Button'
@@ -48,6 +49,7 @@ export function AppLayout() {
         <Brand />
         <nav aria-label={t.menu} className="order-3 flex w-full items-center gap-6 pt-1 text-sm font-semibold text-muted lg:order-0 lg:w-auto lg:pt-0">
           <NavLink end to="/" className="inline-flex min-h-11 items-center hover:text-forest aria-[current=page]:text-forest">{t.home}</NavLink>
+          <NavLink to="/cases" className="inline-flex min-h-11 items-center hover:text-forest aria-[current=page]:text-forest">{caseCopy[locale].publicLink}</NavLink>
           <Link to="/#approche" className="inline-flex min-h-11 items-center hover:text-forest">{t.approach}</Link>
         </nav>
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 lg:justify-end">

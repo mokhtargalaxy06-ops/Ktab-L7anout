@@ -28,6 +28,8 @@ Phase 2 adds `users.session_version` (integer, default 1) to invalidate stale se
 
 Phase 3 adds sourced bilingual geography, shop memberships, and private shop documents. Shops reference a required city and optional locality. A composite foreign key ensures the locality belongs to that city, and the city determines the region. Shop profiles have a review revision and support `rejected` in addition to the statuses below. `shop_documents` records the shop, uploader, profile revision, private key, digest, media type, size, and scan status. `shop_debt_requests` records an operator-assigned request with a shop-scoped unique reference, integer MAD minor units, and one terminal owner response. These requests are a pre-campaign verification inbox.
 
+Phase 4 implements application-specific amounts, household size and situation, versioned consent, applicant and shop evidence audiences, and an action history with case and actor references. A minimal beneficiary profile links the user's private identity to their cases. Public resources omit the profile link. Case status values and transitions are defined in [business-rules.md](business-rules.md#case-verification-and-publication). Multiple applications can carry the same shop and reference for duplicate review. Approval and publication checks serialize on the shop row and prevent competing approved cases for the same reference. Allocation projections, settlement evidence, and funding closure remain planned.
+
 | Table | Columns, relationships, and constraints | Additional indexes |
 | --- | --- | --- |
 | `users` | Unique normalized email, password hash, locale `fr\|ar`, status `active\|suspended\|closed`, verification timestamps | Unique normalized email |
@@ -37,12 +39,12 @@ Phase 3 adds sourced bilingual geography, shop memberships, and private shop doc
 | `regions` | Unique reference code and French and Arabic names. Seed all 12 regions | Unique code |
 | `cities` | Region FK, reference code, French and Arabic names. Unique `(region_id, code)` | `(region_id, name_fr)` |
 | `localities` | City FK, reference code, French and Arabic names. Unique `(city_id, code)` | `(city_id, name_fr)` |
-| `beneficiary_profiles` | Unique user FK, locality FK, restricted household and contact fields, optional archive timestamp | Unique user FK |
+| `beneficiary_profiles` | Unique user FK linking the account to its private applications | Unique user FK |
 | `shops` | Locality FK, display name, restricted settlement destination reference, status `pending\|verified\|suspended\|closed` | `(locality_id, status)` |
 | `shop_memberships` | Composite PK `(shop_id, user_id)`, membership status `active\|revoked` | `(user_id, status)` |
-| `debt_cases` | Beneficiary profile and shop FKs, debt date, unique normalized debt reference per shop, approved cap, approval/publication timestamps, status `draft\|submitted\|shop_confirmed\|approved\|published\|paused\|closed\|rejected`, redacted localized summaries, active allocation and settled balance projections | `(status, published_at, id)`, `(shop_id, status)`, `(beneficiary_profile_id, status)` |
-| `debt_verifications` | Case and actor user FKs, immutable decision `shop_confirmed\|shop_disputed\|admin_approved\|admin_rejected\|admin_paused\|admin_revalidated`, reviewed balance and reason, timestamp | `(debt_case_id, created_at, id)` |
-| `documents` | Uploader user FK, optional case FK, unique private storage key, media type, byte size, integrity digest, status `quarantined\|available\|rejected\|purged`, purpose `debt_evidence\|settlement_evidence`. Case FK required for debt evidence. Retain metadata and purge timestamp after authorized object disposal | `(debt_case_id, purpose, status)` |
+| `debt_cases` | Beneficiary profile, shop and city FKs, normalized reference, debt date, exact submitted and approved amounts, situation, optional household size, consent version and time, case revision, verified shop revision, flag, status and publication time | `(status, published_at, id)`, `(shop_id, status, id)`, `(shop_id, debt_reference)`, `(beneficiary_profile_id, id)` |
+| `debt_verifications` | Case and actor user FKs, append-only action, actor audience, revision, optional reviewed balance and reason, timestamp | `(debt_case_id, id)` |
+| `documents` | Uploader and case FKs, audience `beneficiary\|shop`, revision, unique private storage key, media type, byte size, integrity digest, status `quarantined\|available\|rejected` | `(debt_case_id, revision, audience, status)`, `(status, updated_at)` |
 | `verification_documents` | Composite PK `(verification_id, document_id)`. Both rows must reference the same case and evidence must be available at decision time | `(document_id, verification_id)` |
 | `urgency_policies` | Unique version, effective timestamp, weights and normalization configuration, actor user FK. Immutable once published | `(effective_at, version)` |
 | `case_assessments` | Case, assessor user and policy FKs, vulnerability and grocery risk grades, rationale, assessment timestamp. Append new assessments on revision | `(debt_case_id, created_at, id)` |

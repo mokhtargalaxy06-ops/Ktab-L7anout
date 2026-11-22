@@ -58,6 +58,8 @@ Enter the name and password at the prompts. The password is read without echo. C
 
 See the [official geography sources and coverage](docs/geography-data.md). Shop evidence enters private quarantine. To make clean evidence available for review, install ClamAV, update its signatures, set `SHOP_CLAMSCAN_BINARY` to the absolute path of `clamscan`, and run `php artisan shops:scan-documents` from `backend/`. Repeat the command as needed because it processes up to 100 files per run.
 
+For beneficiary and shop evidence on debt applications, run `php artisan shops:scan-documents --cases`. A beneficiary needs scanned evidence before submitting an application. Reviewers route it to the shop and can publish only after the assigned shop owner confirms the amount and an administrator approves it.
+
 ## Start the frontend
 
 From the repository root in another terminal:

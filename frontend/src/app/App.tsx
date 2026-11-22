@@ -4,6 +4,7 @@ import { SessionProvider } from '../features/auth/SessionProvider'
 import { Dashboard, EmailVerified } from '../features/auth/Dashboard'
 import { RecoveryPage } from '../features/auth/RecoveryPage'
 import { HomePage } from '../features/home/HomePage'
+import { PublicCases } from '../features/cases/PublicCases'
 import { NotFoundPage } from '../features/errors/NotFoundPage'
 import { AppLayout } from './AppLayout'
 import { LocaleProvider } from './LocaleProvider'
@@ -13,6 +14,7 @@ export function App() {
     <Routes>
       <Route element={<AppLayout />}>
         <Route index element={<HomePage />} />
+        <Route path="cases" element={<PublicCases />} />
         <Route path="login" element={<AuthPage key="login" />} />
         <Route path="register" element={<AuthPage key="register" register />} />
         <Route path="dashboard/*" element={<Dashboard />} />

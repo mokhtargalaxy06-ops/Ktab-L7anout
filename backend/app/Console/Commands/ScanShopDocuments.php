@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\DebtDocument;
 use App\Models\ShopDocument;
 use Illuminate\Console\Command;
 use Illuminate\Process\Exceptions\ProcessTimedOutException;
@@ -10,7 +11,7 @@ use Illuminate\Support\Facades\Storage;
 
 class ScanShopDocuments extends Command
 {
-    protected $signature = 'shops:scan-documents';
+    protected $signature = 'shops:scan-documents {--cases : Scan private debt application evidence}';
 
     protected $description = 'Scan quarantined shop documents with ClamAV';
 
@@ -25,14 +26,15 @@ class ScanShopDocuments extends Command
 
         $disk = Storage::disk('local');
         $failed = false;
-        foreach (ShopDocument::where('status', 'quarantined')->orderBy('updated_at')->orderBy('id')->limit(100)->get() as $document) {
+        $model = $this->option('cases') ? DebtDocument::class : ShopDocument::class;
+        foreach ($model::where('status', 'quarantined')->orderBy('updated_at')->orderBy('id')->limit(100)->get() as $document) {
             $path = $disk->path($document->storage_key);
             $status = $this->scan($binary, $path, $document->sha256);
             if ($status === 'quarantined') {
                 $failed = true;
                 $this->error("Incomplete scan for document {$document->id}.");
             }
-            ShopDocument::whereKey($document->id)->where('status', 'quarantined')->update(['status' => $status]);
+            $model::whereKey($document->id)->where('status', 'quarantined')->update(['status' => $status]);
         }
 
         return $failed ? self::FAILURE : self::SUCCESS;

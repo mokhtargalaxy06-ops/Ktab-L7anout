@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Navigate, Route, Routes } from 'react-router'
 import { useLocale } from '../../app/locale'
 import { api, getCsrfCookie } from '../../shared/api/client'
@@ -11,6 +11,8 @@ import { AdminAccounts } from './AdminAccounts'
 import { ShopDashboard } from '../shops/ShopDashboard'
 import { GeographyAdmin } from '../shops/GeographyAdmin'
 import { useSession, type User } from './session'
+
+const CaseDashboard = lazy(() => import('../cases/CaseDashboard').then(module => ({ default: module.CaseDashboard })))
 
 function ProfileForm({ user }: { user: User }) {
   const { locale, t } = useLocale()
@@ -89,7 +91,7 @@ function DashboardPage({ role, user }: { role: AccountRole; user: User }) {
     <div className="grid gap-5 md:grid-cols-[1fr_1.4fr]">
       <ProfileForm user={user} />
       <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2">
-        {role !== 'shopkeeper' && labels.sections[role].map(section => <Card key={section} className="p-5">
+        {role === 'donor' && labels.sections[role].map(section => <Card key={section} className="p-5">
           <h2 className="mb-2 text-lg font-bold">{section}</h2><p className="text-muted">{labels.pending}</p>
         </Card>)}
       </div>
@@ -98,6 +100,11 @@ function DashboardPage({ role, user }: { role: AccountRole; user: User }) {
     {role === 'shopkeeper' && user.abilities.includes('shops.manageAssigned') && <ShopDashboard />}
     {role === 'administrator' && user.abilities.includes('shops.review') && <ShopDashboard admin />}
     {role === 'administrator' && user.abilities.includes('geography.manage') && <GeographyAdmin />}
+    <Suspense fallback={<Loading label={t.loading} />}>
+      {role === 'beneficiary' && user.abilities.includes('applications.submit') && <CaseDashboard audience="beneficiary" />}
+      {role === 'shopkeeper' && user.abilities.includes('verifications.respondAssigned') && <CaseDashboard audience="shop" />}
+      {role === 'administrator' && user.abilities.includes('applications.review') && <CaseDashboard audience="admin" />}
+    </Suspense>
   </section>
 }
 
