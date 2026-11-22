@@ -100,7 +100,7 @@ class ShopWorkflow
             }
             $previous = $shop->status;
             $shop->forceFill(['status' => $decision, 'review_reason' => $review['reason'] ?? null])->save();
-            $this->audit($actor, $shop, 'shop.reviewed', ['from' => $previous, 'to' => $decision]);
+            $this->audit($actor, $shop, 'shop.reviewed', ['from' => $previous, 'to' => $decision, 'reason' => $review['reason'] ?? null]);
 
             return $shop;
         });

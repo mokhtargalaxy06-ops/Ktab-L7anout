@@ -78,6 +78,10 @@ class DonationLedger
         DB::table('case_funding_reports')->updateOrInsert(['debt_case_id' => $case], [
             'allocated_minor' => $allocated, 'settled_minor' => $settled, 'updated_at' => now(), 'simulated' => true,
         ]);
+        $approved = (int) DB::table('debt_cases')->where('id', $case)->value('approved_minor');
+        if ($allocated > 0 && $allocated === $approved && $settled < $approved) {
+            DB::table('settlement_queue')->insertOrIgnore(['debt_case_id' => $case, 'created_at' => now()]);
+        }
     }
 
     public function projectDonation(object $payment): void
@@ -90,5 +94,30 @@ class DonationLedger
             default => 'waiting',
         };
         DB::table('donations')->where('id', $payment->donation_id)->update(['allocation_status' => $status, 'updated_at' => now()]);
+    }
+
+    public function releaseAllocations(object $payment, int $needed, string $operation): int
+    {
+        if ($needed === 0) {
+            return 0;
+        }
+
+        foreach ($this->allocations($payment->id)->where('net_minor', '>', 0)->orderByDesc('id')->get() as $allocation) {
+            $held = (int) DB::table('shop_payment_lines as line')->join('shop_payments as payout', 'payout.id', '=', 'line.shop_payment_id')
+                ->where('line.donation_allocation_id', $allocation->id)->whereNotIn('payout.status', ['canceled', 'failed'])
+                ->sum('line.amount_minor');
+            $available = max(0, (int) $allocation->net_minor - $held);
+            $release = min($available, $needed);
+            if ($release > 0) {
+                $this->event($payment->id, 'allocation_released', $release, "$operation:$allocation->id", ['donation_allocation_id' => $allocation->id]);
+                $this->projectCase($allocation->debt_case_id);
+                $needed -= $release;
+            }
+            if ($needed === 0) {
+                break;
+            }
+        }
+
+        return $needed;
     }
 }

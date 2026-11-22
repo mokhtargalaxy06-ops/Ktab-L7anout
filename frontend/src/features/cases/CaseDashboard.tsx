@@ -8,8 +8,9 @@ import { Card } from '../../shared/ui/Card'
 import { Input } from '../../shared/ui/Input'
 import { GeographySelect } from '../shops/GeographySelect'
 import { PageControls } from '../shops/ShopDashboard'
-import { selectClass, useResource, withCursor, write, type Collection, type Locations } from '../shops/shopApi'
+import { selectClass, useResource, write, type Collection, type Locations } from '../shops/shopApi'
 import { caseCopy, type Action, type CaseStatus } from './copy'
+import { adminCopy } from '../admin/copy'
 import { DiscoveryAssessment } from '../discovery/DiscoveryAssessment'
 import { discoveryCopy } from '../discovery/copy'
 import type { Story } from '../discovery/types'
@@ -77,9 +78,11 @@ function DraftForm({ record, saved }: { record?: Debt; saved: (next: Debt) => vo
 
 function actionsFor(record: Debt, audience: Audience): Action[] {
   if (audience === 'shop') return record.status === 'pending_verification' ? ['confirm', 'dispute', 'reject'] : []
+  if (audience === 'admin' && record.status === 'published') return ['unpublish', 'suspend']
   if (audience !== 'admin' || !['submitted', 'pending_verification', 'under_review', 'disputed', 'approved'].includes(record.status)) return []
   const actions: Action[] = ['request_info', 'reject', record.flagged ? 'clear_flag' : 'flag']
   if (record.status === 'submitted') actions.unshift('route')
+  if (record.status === 'disputed') actions.unshift('reopen_dispute')
   if (record.status === 'under_review' && !record.flagged) actions.unshift('approve')
   if (record.status === 'approved' && !record.flagged) actions.unshift('publish')
   return actions
@@ -183,7 +186,7 @@ function Tracking({ record, audience, base, saved, open }: { record: Debt; audie
         {audience === 'shop' && (decision === 'confirm' || decision === 'dispute') && <Input name="amount_minor" label={text.amount}
           required={decision === 'confirm'} inputMode="numeric" pattern="[1-9][0-9]{0,11}" defaultValue={decision === 'confirm' ? record.amount_minor : ''} key={decision} />}
         {decision && <Input name="reason" label={text.reason} maxLength={500}
-          required={['dispute', 'reject', 'request_info', 'flag', 'clear_flag'].includes(decision)} />}
+          required={['dispute', 'reject', 'request_info', 'flag', 'clear_flag', 'unpublish', 'suspend', 'reopen_dispute'].includes(decision)} />}
         <div><Button disabled={busy || !decision} type="submit">{decision ? text.actions[decision] : text.submit}</Button></div>
       </form>
     </Card>}
@@ -204,9 +207,21 @@ export function CaseDashboard({ audience }: { audience: Audience }) {
   const [cursor, setCursor] = useState('')
   const [revision, setRevision] = useState(0)
   const base = '/api/v1/' + audience + '/cases'
-  const list = useResource<Collection<Debt>>(withCursor(base, cursor), revision)
+  const listQuery = new URLSearchParams(cursor ? { cursor } : {})
+  if (audience === 'admin') {
+    for (const key of ['region_id', 'city_id', 'status']) {
+      const value = params.get(key)
+      if (value) listQuery.set(key, value)
+    }
+  }
+  const list = useResource<Collection<Debt>>(base + '?' + listQuery, revision)
   const detail = useResource<{ data: Debt }>(selected && selected !== 'new' ? base + '/' + selected : null, revision)
-  const open = (value: string) => setParams(value ? { case: value } : {})
+  const open = (value: string) => setParams(current => {
+    const updated = new URLSearchParams(current)
+    if (value) updated.set('case', value)
+    else updated.delete('case')
+    return updated
+  })
   const saved = (record: Debt) => {
     open(audience === 'admin' && record.status === 'draft' ? '' : record.id)
     setRevision(value => value + 1)
@@ -220,6 +235,18 @@ export function CaseDashboard({ audience }: { audience: Audience }) {
       <Button onClick={() => setRevision(value => value + 1)}>{text.refresh}</Button>
     </div>
     {!selected && <Card className="grid gap-3 p-5">
+      {audience === 'admin' && <select aria-label={adminCopy[locale].status} className={selectClass}
+        value={params.get('status') ?? ''} onChange={event => {
+          const updated = new URLSearchParams(params)
+          if (event.target.value) updated.set('status', event.target.value)
+          else updated.delete('status')
+          setCursor('')
+          setParams(updated)
+        }}>
+        <option value="">{adminCopy[locale].all}</option>
+        {Object.entries(text.statuses).filter(([state]) => state !== 'draft').map(([state, label]) =>
+          <option key={state} value={state}>{label}</option>)}
+      </select>}
       {list?.failed ? <p role="alert">{t.failed}</p> : !list?.data ? <p role="status">{t.loading}</p>
         : list.data.data.length === 0 && <p>{text.none}</p>}
       {list?.data?.data.map(record => <div key={record.id} className="flex flex-wrap items-center justify-between gap-2">

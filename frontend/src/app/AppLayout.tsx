@@ -5,6 +5,7 @@ import { Link, NavLink, Outlet } from 'react-router'
 import { useSession } from '../features/auth/session'
 import { caseCopy } from '../features/cases/copy'
 import { discoveryCopy } from '../features/discovery/copy'
+import { settlementCopy } from '../features/settlements/copy'
 import copy, { accountDashboard } from '../features/auth/accountCopy'
 import { api, getCsrfCookie } from '../shared/api/client'
 import { Button, ButtonLink } from '../shared/ui/Button'
@@ -70,7 +71,8 @@ export function AppLayout() {
     <main id="main" tabIndex={-1} className="flex-1"><Outlet /></main>
     <footer className="border-t border-line bg-white py-7">
       <div className="container-shell flex flex-wrap items-center justify-between gap-3">
-        <Brand /><p className="text-sm text-muted">{t.footer}</p>
+        <Brand /><Link className="font-semibold text-forest hover:underline" to="/transparency">{settlementCopy[locale].transparency}</Link>
+        <p className="text-sm text-muted">{t.footer}</p>
       </div>
     </footer>
   </div>

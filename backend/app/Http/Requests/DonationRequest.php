@@ -26,6 +26,8 @@ class DonationRequest extends FormRequest
             'simulate' => ['outcome' => ['required', 'in:success,pending,failed,cancelled']],
             'simulateReturn' => [
                 'kind' => ['required', 'in:refund,reversal'], 'amount_minor' => $amount, 'operation_key' => $key,
+                'current_password' => ['required', 'string', 'current_password'],
+                'reason' => ['required', 'string', 'max:500'],
             ],
         };
     }

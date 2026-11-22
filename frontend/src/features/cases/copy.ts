@@ -14,6 +14,7 @@ export const caseCopy = {
       submit: 'Demande soumise', cancel: 'Demande annulée', route: 'Envoyer à l’épicerie', confirm: 'Confirmer la dette',
       dispute: 'Contester le montant', reject: 'Rejeter', approve: 'Approuver', publish: 'Publier',
       request_info: 'Demander des informations', flag: 'Signaler', clear_flag: 'Lever le signalement',
+      unpublish: 'Dépublier', suspend: 'Suspendre la campagne', reopen_dispute: 'Rouvrir la vérification',
     },
     statuses: {
       draft: 'Brouillon', submitted: 'Soumise', pending_verification: 'Vérification par l’épicerie', under_review: 'En cours d’examen',
@@ -36,6 +37,7 @@ export const caseCopy = {
       submit: 'تم إرسال الطلب', cancel: 'أُلغي الطلب', route: 'إرسال للبقال', confirm: 'تأكيد الدين',
       dispute: 'الاعتراض على المبلغ', reject: 'رفض', approve: 'اعتماد', publish: 'نشر',
       request_info: 'طلب معلومات إضافية', flag: 'وضع علامة', clear_flag: 'إزالة العلامة',
+      unpublish: 'إلغاء النشر', suspend: 'تعليق الحملة', reopen_dispute: 'إعادة فتح التحقق',
     },
     statuses: {
       draft: 'مسودة', submitted: 'مرسل', pending_verification: 'قيد تحقق البقال', under_review: 'قيد المراجعة',

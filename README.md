@@ -1,6 +1,6 @@
 # Morocco Debt Relief
 
-Morocco Debt Relief is a Moroccan food-solidarity initiative. The foundation provides a French and Arabic website, account registration, and session-based sign-in. Donation and payment processing are outside this phase.
+Morocco Debt Relief is a Moroccan food-solidarity initiative. The French and Arabic platform supports verified grocery debt cases, simulated donations, shop settlement, and public financial transparency.
 
 ## Prerequisites
 
@@ -121,3 +121,11 @@ npm.cmd run build
 - `backend/tests/` and `frontend/src/app/App.test.tsx` cover the foundation. The lockfiles pin dependencies.
 
 See the [architecture](docs/architecture.md), [API contract](docs/api-documentation.md), and [deployment notes](docs/deployment.md).
+
+### Simulated shop settlements
+
+With the Phase 6 simulator enabled and migrations applied, fully fund a published case and open the administrator dashboard. Prepare the settlement, then use a different verified administrator to approve and submit it. Record the simulated transfer, confirm it as the assigned shopkeeper, then reconcile it as an administrator who did not initiate it. Use the administrator dashboard to inspect returns, journal events, and reconciliation shortages, or export the two CSV reports. Open the public `/transparency` page to view aggregate simulation results.
+
+### Administrator workspace
+
+Verified administrators can open `/dashboard/administrator` for overview, cases, users, shops, finances, regional activity, and audit history. Apply pending Laravel migrations before opening the workspace. Financial search, manual returns, and settlement controls use the local simulator.

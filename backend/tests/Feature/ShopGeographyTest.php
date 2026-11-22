@@ -72,16 +72,28 @@ class ShopGeographyTest extends TestCase
     {
         $input = ['code' => 'local-test', 'name_fr' => 'Fixture', 'name_ar' => 'اختبار', 'source_url' => 'https://example.test/source', 'source_date' => '2024-01-01', 'active' => true];
         $region = Region::where('code', '1')->firstOrFail();
-        $data = [...$input, 'parent_id' => $region->id];
+        $data = [...$input, 'parent_id' => $region->id, 'reason' => 'Review fixture'];
         $url = '/api/v1/admin/geography/cities';
         $this->asSession($this->account('shopkeeper'))->postJson($url, $data)->assertForbidden();
-        $this->asSession($this->account('administrator'))->postJson($url, $data)->assertCreated()->assertJsonPath('data.region_id', $region->id);
+        $admin = $this->account('administrator');
+        $this->asSession($admin)->postJson($url, $data)->assertCreated()->assertJsonPath('data.region_id', $region->id);
+        $coverage = $this->getJson('/api/v1/admin/regions/activity?coverage=uncovered&region_id='.$region->id)->assertOk();
+        $this->assertGreaterThan(25, $coverage->json('data.cities.total'));
+        parse_str(parse_url($coverage->json('data.cities.next_page_url'), PHP_URL_QUERY), $next);
+        $this->assertSame($region->id, $next['region_id']);
+        $this->assertSame('uncovered', $next['coverage']);
         $this->postJson($url, $data)->assertUnprocessable()->assertJsonValidationErrors('code');
         $this->patchJson('/api/v1/admin/geography/regions/'.$region->id, [
-            ...$region->only(['name_fr', 'name_ar', 'source_url', 'source_date']), 'active' => false,
+            ...$region->only(['name_fr', 'name_ar', 'source_url', 'source_date']), 'active' => false, 'reason' => 'Coverage suspended',
         ])->assertOk();
         $this->getJson('/api/v1/cities?region_id='.$region->id)->assertNotFound();
         $this->getJson('/api/v1/admin/geography/cities?region_id='.$region->id)->assertOk();
+        $this->getJson('/api/v1/admin/regions/activity?coverage=uncovered&region_id='.$region->id)->assertOk()
+            ->assertJsonCount(0, 'data.cities.data');
+        $this->getJson('/api/v1/admin/audit?target_id='.$region->id)->assertOk()
+            ->assertJsonPath('data.0.actor_id', $admin->id)->assertJsonPath('data.0.action', 'geography.updated')
+            ->assertJsonPath('data.0.changes.from.active', true)->assertJsonPath('data.0.changes.to.active', false)
+            ->assertJsonPath('data.0.changes.reason', 'Coverage suspended');
     }
 
     public function test_evidence_review_and_debt_decisions_enforce_current_revision_and_owner(): void

@@ -60,7 +60,7 @@ class DonationController extends Controller
     {
         abort_unless(SimulatedProvider::enabled(), 404);
         $input = $request->validated();
-        $returns->process($request->user(), $donation, $input['kind'], (int) $input['amount_minor'], $input['operation_key']);
+        $returns->process($request->user(), $donation, $input['kind'], (int) $input['amount_minor'], $input['operation_key'], $input['reason']);
 
         return response()->noContent();
     }

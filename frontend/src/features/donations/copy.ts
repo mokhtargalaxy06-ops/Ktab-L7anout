@@ -13,7 +13,7 @@ export const donationCopy = {
     success: 'Simuler un succès', failure: 'Simuler un échec', wait: 'Laisser en attente', cancel: 'Annuler le paiement simulé',
     successTitle: 'Paiement simulé confirmé', failureTitle: 'Paiement simulé non abouti',
     refund: 'Remboursement', reversal: 'Annulation de paiement', requested: 'En attente', canceled: 'Annulé',
-    submitted: 'Envoyé', unknown: 'À vérifier', evidence_pending: 'Justificatif en attente', paid: 'Réglé',
+    submitted: 'Envoyé', unknown: 'À vérifier', evidence_pending: 'Virement enregistré, rapprochement en attente', paid: 'Réglé',
     invalid: 'Vérifiez le montant et le solde du dossier.', back: 'Retour à la liste',
   },
   ar: {
@@ -30,7 +30,7 @@ export const donationCopy = {
     success: 'محاكاة نجاح الدفع', failure: 'محاكاة فشل الدفع', wait: 'الإبقاء قيد الانتظار', cancel: 'إلغاء الدفع المحاكى',
     successTitle: 'تم تأكيد الدفع المحاكى', failureTitle: 'لم ينجح الدفع المحاكى',
     refund: 'استرداد', reversal: 'إلغاء عملية الدفع', requested: 'قيد الانتظار', canceled: 'ملغى',
-    submitted: 'مُرسل', unknown: 'قيد التحقق', evidence_pending: 'بانتظار الإثبات', paid: 'مسدد',
+    submitted: 'مُرسل', unknown: 'قيد التحقق', evidence_pending: 'تم تسجيل التحويل وبانتظار المطابقة', paid: 'مسدد',
     invalid: 'تحقق من المبلغ والرصيد المتبقي للملف.', back: 'العودة إلى القائمة',
   },
 }

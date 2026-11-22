@@ -80,6 +80,7 @@ class DebtWorkflow
             abort_if($audience === 'admin' && $case->profile->user_id === $actor->id, 403);
             abort_if(isset($data['revision']) && (int) $data['revision'] !== $case->revision, 409);
             $state = $case->status;
+            $wasFlagged = $case->flagged;
             $next = match ([$audience, $action]) {
                 ['beneficiary', 'submit'] => $state === 'draft' ? 'submitted' : null,
                 ['beneficiary', 'cancel'] => in_array($state, ['draft', 'submitted', 'pending_verification', 'under_review', 'disputed'], true) ? 'cancelled' : null,
@@ -88,12 +89,17 @@ class DebtWorkflow
                 ['shop', 'reject'], ['shop', 'dispute'] => $state === 'pending_verification' ? 'disputed' : null,
                 ['admin', 'approve'] => $state === 'under_review' ? 'approved' : null,
                 ['admin', 'publish'] => $state === 'approved' ? 'published' : null,
+                ['admin', 'unpublish'], ['admin', 'suspend'] => $state === 'published' ? 'approved' : null,
+                ['admin', 'reopen_dispute'] => $state === 'disputed' ? 'pending_verification' : null,
                 ['admin', 'request_info'] => in_array($state, ['submitted', 'pending_verification', 'disputed', 'under_review', 'approved'], true) ? 'draft' : null,
                 ['admin', 'reject'] => in_array($state, ['submitted', 'pending_verification', 'disputed', 'under_review', 'approved'], true) ? 'rejected' : null,
                 ['admin', 'flag'], ['admin', 'clear_flag'] => in_array($state, ['submitted', 'pending_verification', 'disputed', 'under_review', 'approved'], true) ? $state : null,
                 default => null,
             };
             abort_unless($next, 409);
+            if (in_array($action, ['request_info', 'reject'], true)) {
+                abort_if(DB::table('donation_allocations')->where('debt_case_id', $case->id)->exists(), 409);
+            }
             $this->apply($case, $shop, $action, $data);
             $case->status = $next;
             $case->save();
@@ -102,7 +108,8 @@ class DebtWorkflow
                 'amount_minor' => $data['amount_minor'] ?? null, 'reason' => $data['reason'] ?? null, 'created_at' => now(),
             ]);
             if ($audience === 'admin') {
-                $this->audit($actor, $case, 'case.'.$action);
+                $this->audit($actor, $case, 'case.'.$action, ['from' => $state, 'to' => $next, 'reason' => $data['reason'] ?? null,
+                    'flagged_before' => $wasFlagged, 'flagged_after' => $case->flagged]);
             }
 
             return $case;
@@ -111,7 +118,7 @@ class DebtWorkflow
 
     private function apply(DebtCase $case, Shop $shop, string $action, array $data): void
     {
-        if (in_array($action, ['submit', 'route', 'confirm', 'approve', 'publish'], true)) {
+        if (in_array($action, ['submit', 'route', 'confirm', 'approve', 'publish', 'reopen_dispute'], true)) {
             abort_unless($shop->status === 'verified' && $shop->city_id === $case->city_id, 409);
         }
         if ($action === 'submit') {
@@ -133,6 +140,9 @@ class DebtWorkflow
         if ($action === 'publish') {
             $case->published_at = now();
         }
+        if (in_array($action, ['unpublish', 'suspend'], true)) {
+            $case->published_at = null;
+        }
         if ($action === 'request_info') {
             $case->forceFill([
                 'revision' => $case->revision + 1, 'verified_shop_revision' => null,
@@ -140,8 +150,8 @@ class DebtWorkflow
                 'public_story' => 'essentials', 'vulnerability_grade' => null, 'access_risk_grade' => null,
             ]);
         }
-        if (in_array($action, ['flag', 'clear_flag'], true)) {
-            $case->flagged = $action === 'flag';
+        if (in_array($action, ['flag', 'clear_flag', 'suspend'], true)) {
+            $case->flagged = $action !== 'clear_flag';
         }
     }
 

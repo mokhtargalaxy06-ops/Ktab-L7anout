@@ -21,8 +21,8 @@ class DebtActionRequest extends FormRequest
                 'revision' => ['required', 'integer', 'min:1'],
             ],
             'review' => [
-                'decision' => ['required', 'in:route,approve,reject,request_info,flag,clear_flag,publish'],
-                'reason' => ['required_if:decision,reject,request_info,flag,clear_flag', 'nullable', 'string', 'max:500'],
+                'decision' => ['required', 'in:route,approve,reject,request_info,flag,clear_flag,publish,unpublish,suspend,reopen_dispute'],
+                'reason' => ['required_if:decision,reject,request_info,flag,clear_flag,unpublish,suspend,reopen_dispute', 'nullable', 'string', 'max:500'],
                 'revision' => ['required', 'integer', 'min:1'],
             ],
         };

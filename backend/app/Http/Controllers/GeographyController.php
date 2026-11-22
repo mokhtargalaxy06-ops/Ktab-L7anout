@@ -12,6 +12,8 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class GeographyController extends Controller
@@ -38,8 +40,7 @@ class GeographyController extends Controller
     {
         $this->authorizeManager($request);
         [$model, $parentModel, $parentKey] = self::LEVELS[$level];
-        $attributes = Arr::except($request->validated(), ['parent_id']);
-        $record = $id ? $model::findOrFail($id) : new $model;
+        $attributes = Arr::except($request->validated(), ['parent_id', 'reason']);
 
         if (! $id && $parentKey) {
             $parent = $parentModel::find($request->validated('parent_id'));
@@ -50,7 +51,21 @@ class GeographyController extends Controller
         }
 
         try {
-            FinancialLock::run(fn () => $record->fill($attributes)->save());
+            $record = FinancialLock::run(function () use ($id, $model, $attributes, $request, $level) {
+                $record = $id ? $model::lockForUpdate()->findOrFail($id) : new $model;
+                $before = $id ? $record->only(array_keys($attributes)) : null;
+                $record->fill($attributes)->save();
+                DB::table('audit_logs')->insert([
+                    'id' => (string) Str::uuid7(), 'actor_id' => $request->user()->id, 'actor_kind' => 'user',
+                    'action' => $id ? 'geography.updated' : 'geography.created',
+                    'target_type' => $level, 'target_id' => $record->id, 'correlation_id' => (string) Str::uuid(),
+                    'metadata' => json_encode(['from' => $before, 'to' => $record->only(array_keys($attributes)),
+                        'reason' => $request->validated('reason')], JSON_THROW_ON_ERROR),
+                    'created_at' => now(),
+                ]);
+
+                return $record;
+            });
         } catch (UniqueConstraintViolationException) {
             throw ValidationException::withMessages(['code' => __('shops.duplicate_code')]);
         }

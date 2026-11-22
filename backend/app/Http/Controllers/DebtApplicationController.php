@@ -28,6 +28,12 @@ class DebtApplicationController extends Controller
                 ->whereHas('profile', fn ($profile) => $profile->where('user_id', '!=', $request->user()->id)),
             'admin' => $query->where('status', '!=', 'draft'),
         };
+        if ($audience === 'admin') {
+            $filters = $request->validate(['region_id' => ['nullable', 'uuid'], 'city_id' => ['nullable', 'uuid'],
+                'status' => ['nullable', 'in:submitted,pending_verification,under_review,approved,published,rejected,disputed,cancelled']]);
+            $query->when($filters['region_id'] ?? null, fn ($cases, $region) => $cases->whereHas('city', fn ($city) => $city->where('region_id', $region)))
+                ->where(array_filter(array_intersect_key($filters, array_flip(['city_id', 'status']))));
+        }
         $cases = $query->orderByDesc('id')->cursorPaginate(25);
 
         return response()->json([

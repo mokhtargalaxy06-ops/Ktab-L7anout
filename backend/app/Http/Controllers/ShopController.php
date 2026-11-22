@@ -27,11 +27,13 @@ class ShopController extends Controller
             ->orderBy('id')->cursorPaginate(25))->response()->header('Cache-Control', 'no-store');
     }
 
-    public function adminIndex(): JsonResponse
+    public function adminIndex(Request $request): JsonResponse
     {
         Gate::authorize('review', Shop::class);
 
-        return ShopResource::collection(Shop::with('city')->orderBy('id')->cursorPaginate(25))
+        $filters = $request->validate(['city_id' => ['nullable', 'uuid'], 'status' => ['nullable', 'in:pending,verified,rejected,suspended,closed']]);
+
+        return ShopResource::collection(Shop::with('city')->where(array_filter($filters))->orderBy('id')->cursorPaginate(25))
             ->response()->header('Cache-Control', 'no-store');
     }
 

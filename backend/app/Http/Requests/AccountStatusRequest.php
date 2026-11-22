@@ -15,6 +15,7 @@ class AccountStatusRequest extends FormRequest
     {
         return [
             'status' => ['required', 'in:active,suspended,closed'],
+            'reason' => ['required', 'string', 'max:500'],
             'current_password' => ['bail', 'required', 'string', 'max:72', 'current_password:web'],
         ];
     }

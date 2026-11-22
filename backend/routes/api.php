@@ -1,11 +1,13 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AdminWorkspaceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DebtApplicationController;
 use App\Http\Controllers\DonationController;
 use App\Http\Controllers\GeographyController;
 use App\Http\Controllers\PublicDiscoveryController;
+use App\Http\Controllers\SettlementController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\VerificationController;
 use App\Http\Middleware\EnsureActiveAccount;
@@ -20,9 +22,26 @@ Route::get('/v1/{level}', [GeographyController::class, 'publicIndex'])->whereIn(
 Route::get('/v1/cases', [PublicDiscoveryController::class, 'index']);
 Route::get('/v1/cases/{reference}', [PublicDiscoveryController::class, 'show'])->whereUuid('reference');
 Route::get('/v1/discovery', [PublicDiscoveryController::class, 'home']);
+Route::get('/v1/transparency', [SettlementController::class, 'transparency'])->middleware('throttle:60,1');
 Route::get('/v1/donation-policies/current', [DonationController::class, 'policy']);
 Route::post('/v1/webhooks/payments/simulator', [DonationController::class, 'webhook'])->middleware('throttle:120,1');
 Route::prefix('v1')->middleware(['auth:sanctum', EnsureActiveAccount::class])->group(function () use ($geographyLevels) {
+    Route::get('/admin/overview', [AdminWorkspaceController::class, 'overview']);
+    Route::get('/admin/regions/activity', [AdminWorkspaceController::class, 'regions']);
+    Route::get('/admin/audit', [AdminWorkspaceController::class, 'audit']);
+    Route::get('/admin/financial-search/{kind}', [AdminWorkspaceController::class, 'finance'])
+        ->whereIn('kind', ['donations', 'allocations', 'transactions', 'refunds'])->middleware('throttle:60,1');
+    foreach (['admin', 'shop'] as $audience) {
+        Route::get("/$audience/settlements", [SettlementController::class, 'index'])->defaults('audience', $audience);
+        Route::post("/$audience/settlements/{case}/{payment}", [SettlementController::class, 'act'])
+            ->whereUuid(['case', 'payment'])->defaults('audience', $audience)->middleware('throttle:30,1');
+    }
+    Route::post('/admin/settlements/{case}', [SettlementController::class, 'act'])
+        ->whereUuid('case')->defaults('audience', 'admin')->middleware('throttle:30,1');
+    Route::get('/admin/finance', [SettlementController::class, 'history']);
+    Route::get('/admin/finance/journal.csv', [SettlementController::class, 'export'])->middleware('throttle:10,1');
+    Route::get('/admin/finance/reconciliation.csv', [SettlementController::class, 'export'])
+        ->defaults('report', 'reconciliation')->middleware('throttle:10,1');
     Route::get('/me', [AuthController::class, 'me']);
     Route::get('/donations', [DonationController::class, 'index'])->can('create', Donation::class);
     Route::post('/donations', [DonationController::class, 'create'])->can('create', Donation::class)->middleware('throttle:30,1');

@@ -13,6 +13,7 @@ import { useLocale } from './locale'
 import { Loading } from '../shared/ui/Loading'
 
 const Dashboard = lazy(() => import('../features/auth/Dashboard').then(module => ({ default: module.Dashboard })))
+const TransparencyPage = lazy(() => import('../features/settlements/SettlementPages').then(module => ({ default: module.TransparencyPage })))
 const DonationRoutes = lazy(() => import('../features/donations/DonationPages').then(module => ({ default: module.DonationRoutes })))
 const EmailVerified = lazy(() => import('../features/auth/Dashboard').then(module => ({ default: module.EmailVerified })))
 
@@ -30,6 +31,7 @@ export function App() {
         <Route path="cases" element={<PublicCases />} />
         <Route path="cases/:reference" element={<CaseDetail />} />
         <Route path="urgent" element={<PublicCases key="urgent" urgent />} />
+        <Route path="transparency" element={<TransparencyPage />} />
         <Route path="donations/*" element={<DonationRoutes />} />
         <Route path="login" element={<AuthPage key="login" />} />
         <Route path="register" element={<AuthPage key="register" register />} />

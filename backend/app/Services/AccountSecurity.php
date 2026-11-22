@@ -10,9 +10,9 @@ use Illuminate\Support\Str;
 
 class AccountSecurity
 {
-    public function changeStatus(User $actor, User $target, string $status): User
+    public function changeStatus(User $actor, User $target, string $status, string $reason): User
     {
-        return DB::transaction(function () use ($actor, $target, $status) {
+        return DB::transaction(function () use ($actor, $target, $status, $reason) {
             $account = User::lockForUpdate()->findOrFail($target->id);
             Gate::forUser($actor)->authorize('changeStatus', $account);
 
@@ -29,7 +29,7 @@ class AccountSecurity
             ])->save();
             $this->revokeSessions($account);
             Password::deleteToken($account);
-            $this->audit($actor, $account, 'account.status_changed', ['from' => $previous, 'to' => $status]);
+            $this->audit($actor, $account, 'account.status_changed', ['from' => $previous, 'to' => $status, 'reason' => $reason]);
 
             return $account;
         });

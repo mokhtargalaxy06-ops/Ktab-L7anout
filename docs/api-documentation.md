@@ -124,3 +124,33 @@ The donation detail returns payment status `pending`, `confirmed`, `failed`, or 
 For simulation, use a signed envelope carrying adapter event ID, operation reference, event type, amount, currency, and occurrence timestamp. Verify the signed raw payload and timestamp before writing to the inbox. Duplicate submissions with mismatched payloads enter reconciliation and return 409. Resolve late and out-of-order events using verified operation outcomes. Payout, allocation, and retry jobs have no public trigger. See the [state and money rules](business-rules.md), [database statuses](database-design.md), and [security requirements](security.md).
 
 Document the exact DTOs, error codes, limits, and simulation envelope as OpenAPI when implementing this contract. Live payment contracts and real-provider actions are deliberately pending provider approval and capability verification.
+
+## Phase 7 settlement and transparency API
+
+All paths below are relative to `/api/v1`. The public `GET /transparency` returns aggregate money as decimal strings in MAD minor units, counts, a simulation flag, and regional settled amounts and counts. It exposes no household, donor, shop or payout identifiers.
+
+| Method and path | Contract |
+| --- | --- |
+| GET /admin/settlements | Paginated queued cases and payout attempts. Optional status filter includes `dispute`. |
+| GET /shop/settlements | Paginated approved or published debts for actively owned shops, with funding and settlement progress. |
+| POST /admin/settlements/{case} | `initiate`, returning 204 and reserving the case's complete allocation. |
+| POST /admin/settlements/{case}/{payment} | `submit`, `transfer`, `fail`, `reconcile`, or `recover`. |
+| POST /shop/settlements/{case}/{payment} | `confirm` or `dispute` for the assigned shop. |
+| GET /admin/finance | Journal, incoming payment attempts, and returns with independent `journal` `returns`, and `receipts` cursors, freeze state, and up to 25 deficit rows. |
+| GET /admin/finance/journal.csv | All monetary events with receipt, allocation, return, and payout keys. |
+| GET /admin/finance/reconciliation.csv | Per-receipt balances computed from those same monetary events. |
+
+Private endpoints use the existing authenticated session and are available when simulation is enabled. Mutations require an `Idempotency-Key` and a JSON `action`. Administrator commands require the current `password`. A `reason` is required for failures and disputes. Authorized repeats of the same command return 204. Mismatched replays and disallowed transitions return 409. Payout confirmation leaves the case unsettled until administrator reconciliation.
+
+## Phase 8 administrator workspace
+
+The following verified-administrator endpoints are under `/api/v1/admin`. The overview and financial search also require the existing financial review ability.
+
+| Endpoint | Query and response |
+| --- | --- |
+| GET /overview | Account, case, shop and settlement counts, and confirmed donation minor units. The response indicates simulation mode. |
+| GET /financial-search/{kind} | Paged donations, allocations, transactions, or refunds. Optional exact UUID filters `id` and `related_id`. The related ID is the case for donations and the receipt for other types. |
+| GET /regions/activity | Regional totals and paginated city activity. Filter by `region_id` and `coverage=uncovered`. |
+| GET /audit | Paged audit events, optionally filtered by `actor_id` and `target_id`. Only approved metadata fields are returned. |
+
+The user list accepts `q`, `role` and `status`. Case lists accept `region_id`, `city_id` and `status`, and shop lists accept `city_id` and `status`. Account status changes, geography changes, and manual simulated returns require a reason. Returns also require current-password verification and an idempotency key. The existing case review endpoint accepts `unpublish`, `suspend` and `reopen_dispute`, each with the current revision and a reason.

@@ -15,6 +15,7 @@ class GeographyRequest extends FormRequest
             'source_url' => ['required', 'url:https', 'max:500'],
             'source_date' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'],
             'active' => ['required', 'boolean'],
+            'reason' => ['required', 'string', 'max:500'],
             'parent_id' => [$this->isMethod('POST') && $this->route('level') !== 'regions' ? 'required' : 'prohibited', 'uuid'],
         ];
     }

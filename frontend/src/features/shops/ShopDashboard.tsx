@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { useLocale } from '../../app/locale'
 import { api } from '../../shared/api/client'
 import { Button } from '../../shared/ui/Button'
@@ -188,7 +189,10 @@ export function ShopDashboard({ admin = false }: { admin?: boolean }) {
   const [selected, setSelected] = useState('')
   const [cursor, setCursor] = useState('')
   const [revision, setRevision] = useState(0)
-  const result = useResource<Collection<Shop>>(withCursor('/api/v1/' + (admin ? 'admin/shops' : 'shop/shops'), cursor), revision)
+  const [params] = useSearchParams()
+  const city = admin ? params.get('city_id') : null
+  const filters = new URLSearchParams({ ...(cursor && { cursor }), ...(city && { city_id: city }) })
+  const result = useResource<Collection<Shop>>('/api/v1/' + (admin ? 'admin/shops' : 'shop/shops') + '?' + filters, revision)
   const detail = useResource<{ data: Shop }>(selected ? '/api/v1/shops/' + selected : null, revision)
   const [updated, setUpdated] = useState<Shop | null>(null)
   const shop = detail?.data?.data ?? (updated?.id === selected ? updated : undefined)

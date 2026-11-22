@@ -8,11 +8,11 @@ use Illuminate\Support\Str;
 
 class SimulatedReturns
 {
-    public function __construct(private readonly DonationLedger $ledger) {}
+    public function __construct(private readonly DonationLedger $ledger, private readonly ShopSettlement $settlements) {}
 
-    public function process(User $operator, object $donation, string $kind, int $amount, string $operation): void
+    public function process(User $operator, object $donation, string $kind, int $amount, string $operation, string $reason): void
     {
-        FinancialLock::run(function ($control) use ($operator, $donation, $kind, $amount, $operation) {
+        FinancialLock::run(function ($control) use ($operator, $donation, $kind, $amount, $operation, $reason) {
             $payment = DB::table('payment_transactions')->where('donation_id', $donation->id)->lockForUpdate()->first();
             abort_unless($payment->status === 'confirmed', 409);
             $key = "manual:$payment->id:$operation";
@@ -31,7 +31,12 @@ class SimulatedReturns
             } else {
                 abort_if($control->frozen, 409);
             }
-            $deficit = $this->releaseAllocations($payment, max(0, $amount - $balance['available']), $key);
+            $journalKey = hash('sha256', $key);
+            $deficit = $this->ledger->releaseAllocations($payment, max(0, $amount - $balance['available']), $journalKey);
+            if ($kind === 'reversal' && $deficit > 0) {
+                $this->settlements->cancelUnsubmitted($payment);
+                $deficit = $this->ledger->releaseAllocations($payment, $deficit, "$journalKey:after-hold");
+            }
 
             if ($kind === 'refund') {
                 abort_if($deficit > 0, 409);
@@ -54,7 +59,8 @@ class SimulatedReturns
             DB::table('audit_logs')->insert([
                 'id' => (string) Str::uuid7(), 'actor_id' => $operator->id, 'actor_kind' => 'user',
                 'action' => 'funding.simulated_'.$kind, 'target_type' => 'donation', 'target_id' => $donation->id,
-                'correlation_id' => (string) Str::uuid(), 'metadata' => json_encode(['amount_minor' => $amount], JSON_THROW_ON_ERROR),
+                'correlation_id' => (string) Str::uuid(), 'metadata' => json_encode(['amount_minor' => $amount, 'reason' => $reason,
+                    'from' => 'confirmed', 'to' => $kind === 'refund' ? 'refund_confirmed' : 'reversal_confirmed'], JSON_THROW_ON_ERROR),
                 'created_at' => now(),
             ]);
         });
@@ -71,36 +77,11 @@ class SimulatedReturns
             $amount = (int) $return->amount_minor;
             $this->ledger->event($payment->id, 'return_released', $amount, "release:$return->id", ['refund_id' => $return->id]);
             $released = min($amount, $needed);
-            $this->ledger->reserveReturn($payment, $amount - $released, $return->reason, "$operation:remainder:$return->id");
+            $this->ledger->reserveReturn($payment, $amount - $released, $return->reason, hash('sha256', "$operation:remainder:$return->id"));
             $needed -= $released;
             if ($needed === 0) {
                 break;
             }
         }
-    }
-
-    private function releaseAllocations(object $payment, int $needed, string $operation): int
-    {
-        if ($needed === 0) {
-            return 0;
-        }
-
-        foreach ($this->ledger->allocations($payment->id)->where('net_minor', '>', 0)->orderByDesc('id')->get() as $allocation) {
-            $held = (int) DB::table('shop_payment_lines as line')->join('shop_payments as payout', 'payout.id', '=', 'line.shop_payment_id')
-                ->where('line.donation_allocation_id', $allocation->id)->whereNotIn('payout.status', ['canceled', 'failed'])
-                ->sum('line.amount_minor');
-            $available = max(0, (int) $allocation->net_minor - $held);
-            $release = min($available, $needed);
-            if ($release > 0) {
-                $this->ledger->event($payment->id, 'allocation_released', $release, "$operation:$allocation->id", ['donation_allocation_id' => $allocation->id]);
-                $this->ledger->projectCase($allocation->debt_case_id);
-                $needed -= $release;
-            }
-            if ($needed === 0) {
-                break;
-            }
-        }
-
-        return $needed;
     }
 }

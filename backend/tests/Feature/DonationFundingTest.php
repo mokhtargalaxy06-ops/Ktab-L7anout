@@ -134,12 +134,12 @@ class DonationFundingTest extends TestCase
         $donation = $this->create(10000, $case);
         $this->simulate($donation, 'success')->assertOk();
         $path = "/api/v1/admin/donations/$donation/simulate-return";
-        $this->postJson($path, ['kind' => 'refund', 'amount_minor' => '2500'], ['Idempotency-Key' => 'return-1'])->assertForbidden();
+        $this->postJson($path, ['kind' => 'refund', 'current_password' => 'password', 'reason' => 'Refund fixture', 'amount_minor' => '2500'], ['Idempotency-Key' => 'return-1'])->assertForbidden();
         $this->actAs('administrator');
-        $this->postJson($path, ['kind' => 'refund', 'amount_minor' => '2500'], ['Idempotency-Key' => 'return-1'])->assertNoContent();
-        $this->postJson($path, ['kind' => 'refund', 'amount_minor' => '2500'], ['Idempotency-Key' => 'return-1'])->assertNoContent();
-        $this->postJson($path, ['kind' => 'reversal', 'amount_minor' => '7000'], ['Idempotency-Key' => 'reverse-1'])->assertNoContent();
-        $this->postJson($path, ['kind' => 'reversal', 'amount_minor' => '501'], ['Idempotency-Key' => 'reverse-too-much'])->assertConflict();
+        $this->postJson($path, ['kind' => 'refund', 'current_password' => 'password', 'reason' => 'Refund fixture', 'amount_minor' => '2500'], ['Idempotency-Key' => 'return-1'])->assertNoContent();
+        $this->postJson($path, ['kind' => 'refund', 'current_password' => 'password', 'reason' => 'Refund fixture', 'amount_minor' => '2500'], ['Idempotency-Key' => 'return-1'])->assertNoContent();
+        $this->postJson($path, ['kind' => 'reversal', 'current_password' => 'password', 'reason' => 'Reversal fixture', 'amount_minor' => '7000'], ['Idempotency-Key' => 'reverse-1'])->assertNoContent();
+        $this->postJson($path, ['kind' => 'reversal', 'current_password' => 'password', 'reason' => 'Reversal fixture', 'amount_minor' => '501'], ['Idempotency-Key' => 'reverse-too-much'])->assertConflict();
         $this->assertDatabaseCount('refunds', 2);
         $this->assertDatabaseHas('donation_allocations', ['amount_minor' => 10000]);
         $this->assertDatabaseHas('case_funding_reports', ['debt_case_id' => $case->id, 'allocated_minor' => 500]);
@@ -167,9 +167,9 @@ class DonationFundingTest extends TestCase
         $this->getJson("/api/v1/donations/$donation")->assertJsonPath('data.allocations.0.settlements.0.status', 'submitted');
         $this->actAs('administrator');
         $url = "/api/v1/admin/donations/$donation/simulate-return";
-        $this->postJson($url, ['kind' => 'refund', 'amount_minor' => '100'], ['Idempotency-Key' => 'refund-blocked'])
+        $this->postJson($url, ['kind' => 'refund', 'current_password' => 'password', 'reason' => 'Refund fixture', 'amount_minor' => '100'], ['Idempotency-Key' => 'refund-blocked'])
             ->assertConflict();
-        $this->postJson($url, ['kind' => 'reversal', 'amount_minor' => '4000'], ['Idempotency-Key' => 'reverse-held'])
+        $this->postJson($url, ['kind' => 'reversal', 'current_password' => 'password', 'reason' => 'Reversal fixture', 'amount_minor' => '4000'], ['Idempotency-Key' => 'reverse-held'])
             ->assertNoContent();
         $this->assertTrue((bool) DB::table('financial_control')->where('id', 1)->value('frozen'));
         $this->assertDatabaseHas('shop_payments', ['id' => $payout, 'status' => 'submitted']);
@@ -185,7 +185,7 @@ class DonationFundingTest extends TestCase
         $donation = $this->create(5000);
         $this->simulate($donation, 'success')->assertOk();
         $this->actAs('administrator');
-        $this->postJson("/api/v1/admin/donations/$donation/simulate-return", ['kind' => 'reversal', 'amount_minor' => '1000'],
+        $this->postJson("/api/v1/admin/donations/$donation/simulate-return", ['kind' => 'reversal', 'current_password' => 'password', 'reason' => 'Reversal fixture', 'amount_minor' => '1000'],
             ['Idempotency-Key' => 'partial-pool-reversal'])->assertNoContent();
         $this->case(10000);
         $this->artisan('funding:process')->assertSuccessful();
@@ -202,7 +202,7 @@ class DonationFundingTest extends TestCase
         $this->simulate($second, 'success')->assertJsonPath('data.return_pending_minor', '4000');
         $this->actAs('administrator');
         $path = "/api/v1/admin/donations/$second/simulate-return";
-        $payload = ['kind' => 'reversal', 'amount_minor' => '1000'];
+        $payload = ['kind' => 'reversal', 'current_password' => 'password', 'reason' => 'Reversal fixture', 'amount_minor' => '1000'];
         $headers = ['Idempotency-Key' => 'partial-excess-reversal'];
         $this->postJson($path, $payload, $headers)->assertNoContent();
         $this->postJson($path, $payload, $headers)->assertNoContent();
@@ -211,6 +211,178 @@ class DonationFundingTest extends TestCase
         $this->artisan('funding:process')->assertSuccessful();
         $this->assertDatabaseHas('refunds', ['status' => 'confirmed', 'amount_minor' => 3000, 'kind' => 'refund']);
         $this->assertDatabaseCount('refunds', 3);
+    }
+
+    public function test_settlement_requires_separate_approval_shop_confirmation_and_reconciliation(): void
+    {
+        $case = $this->case(5000);
+        $this->simulate($this->create(5000, $case), 'success')->assertOk();
+        $this->assertDatabaseHas('settlement_queue', ['debt_case_id' => $case->id]);
+        $this->actAs('administrator');
+        $path = "/api/v1/admin/settlements/$case->id";
+        $this->settlementAction($path, 'initiate', 'first')->assertNoContent();
+        $this->settlementAction($path, 'initiate', 'first')->assertNoContent();
+        $this->assertDatabaseCount('shop_payments', 1);
+        $payment = DB::table('shop_payments')->value('id');
+        $duplicate = (array) DB::table('shop_payments')->find($payment);
+        $duplicate['id'] = (string) Str::uuid();
+        $duplicate['operation_key'] = 'duplicate-active-payout';
+        try {
+            DB::transaction(fn () => DB::table('shop_payments')->insert($duplicate));
+            $this->fail('The database accepted a second active payout.');
+        } catch (QueryException $exception) {
+            $this->assertContains($exception->errorInfo[0], ['23000', '23505']);
+        }
+        $this->settlementAction("$path/$payment", 'submit')->assertForbidden();
+        $this->actAs('administrator');
+        $this->settlementAction("$path/$payment", 'submit')->assertNoContent();
+        $this->settlementAction("$path/$payment", 'transfer')->assertNoContent();
+        $this->settlementAction("$path/$payment", 'reconcile')->assertConflict();
+        $this->getJson('/api/v1/transparency')->assertJsonPath('data.received_minor', '5000')
+            ->assertJsonPath('data.allocated_minor', '5000')->assertJsonPath('data.transferred_minor', '5000')
+            ->assertJsonPath('data.confirmed_minor', '0')->assertJsonPath('data.debts_settled', 0);
+
+        $owner = $this->actAs('shopkeeper');
+        $shopPath = "/api/v1/shop/settlements/$case->id/$payment";
+        $this->getJson('/api/v1/shop/settlements')->assertJsonCount(0, 'data');
+        $this->settlementAction($shopPath, 'confirm', admin: false)->assertForbidden();
+        DB::table('shop_memberships')->insert(['shop_id' => $case->shop_id, 'user_id' => $owner->id, 'granted_at' => now()]);
+        $this->getJson('/api/v1/shop/settlements')->assertJsonPath('data.0.payments.0.reference', 'SIM-PAYOUT-'.$payment);
+        $this->settlementAction($shopPath, 'confirm', admin: false)->assertNoContent();
+        $this->getJson('/api/v1/transparency')->assertJsonPath('data.confirmed_minor', '5000')->assertJsonPath('data.debts_settled', 0);
+        $this->settlementAction($shopPath, 'dispute', admin: false)->assertNoContent();
+        $this->get('/api/v1/admin/finance/journal.csv')->assertForbidden();
+        $this->actAs('administrator');
+        $this->getJson('/api/v1/admin/settlements?status=dispute')->assertJsonPath('data.0.id', $case->id);
+        $this->settlementAction("$path/$payment", 'reconcile')->assertConflict();
+        Auth::forgetGuards();
+        $this->actingAs($owner, 'web')->withSession(['account_version' => $owner->session_version]);
+        $this->settlementAction($shopPath, 'confirm', admin: false)->assertNoContent();
+        $this->actAs('administrator');
+        $this->settlementAction("$path/$payment", 'reconcile')->assertNoContent();
+        $this->getJson('/api/v1/transparency')->assertJsonPath('data.debts_settled', 1)
+            ->assertJsonPath('data.families_helped', 1)->assertJsonPath('data.available_minor', '0')
+            ->assertJsonPath('data.regions.0.settled_minor', '5000');
+        $this->getJson('/api/v1/admin/finance')->assertJsonPath('data.transactions.0.type', 'payout_evidenced');
+        $csv = $this->get('/api/v1/admin/finance/journal.csv')->assertOk()->streamedContent();
+        $this->assertStringContainsString('payout_transferred,5000', $csv);
+        $this->assertStringContainsString('payout_evidenced,5000', $csv);
+        $this->assertStringContainsString($payment, $csv);
+        $report = $this->get('/api/v1/admin/finance/reconciliation.csv')->assertOk()->streamedContent();
+        $this->assertStringContainsString('5000,0,5000,5000,0,0', $report);
+    }
+
+    public function test_payout_operators_and_shop_owners_cannot_act_on_both_sides(): void
+    {
+        $case = $this->case(5000);
+        $this->simulate($this->create(5000, $case), 'success')->assertOk();
+        $operator = $this->actAs('administrator');
+        $path = "/api/v1/admin/settlements/$case->id";
+        $this->settlementAction($path, 'initiate')->assertNoContent();
+        $payment = DB::table('shop_payments')->value('id');
+        $this->actAs('administrator');
+        $this->settlementAction("$path/$payment", 'submit')->assertNoContent();
+        $this->settlementAction("$path/$payment", 'transfer')->assertNoContent();
+        $operator->roles()->attach(Role::where('code', 'shopkeeper')->value('id'), ['granted_at' => now()]);
+        DB::table('shop_memberships')->insert(['shop_id' => $case->shop_id, 'user_id' => $operator->id, 'granted_at' => now()]);
+        Auth::forgetGuards();
+        $this->actingAs($operator, 'web')->withSession(['account_version' => $operator->session_version]);
+        $this->settlementAction("/api/v1/shop/settlements/$case->id/$payment", 'confirm', admin: false)->assertForbidden();
+        $this->settlementAction("$path/$payment", 'reconcile')->assertForbidden();
+        $this->assertDatabaseMissing('settlement_actions', ['shop_payment_id' => $payment, 'action' => 'confirm']);
+    }
+
+    public function test_failed_attempt_can_retry_and_a_reversal_releases_unsubmitted_settlement(): void
+    {
+        $case = $this->case(5000);
+        $donation = $this->create(5000, $case);
+        $this->simulate($donation, 'success')->assertOk();
+        $this->actAs('administrator');
+        $path = "/api/v1/admin/settlements/$case->id";
+        $this->settlementAction($path, 'initiate')->assertNoContent();
+        $first = DB::table('shop_payments')->value('id');
+        $this->actAs('administrator');
+        $this->settlementAction("$path/$first", 'submit')->assertNoContent();
+        $this->settlementAction("$path/$first", 'fail')->assertNoContent();
+        $this->assertDatabaseHas('shop_payments', ['id' => $first, 'status' => 'failed']);
+        $this->settlementAction($path, 'initiate')->assertNoContent();
+        $this->postJson("/api/v1/admin/donations/$donation/simulate-return", ['kind' => 'reversal', 'current_password' => 'password', 'reason' => 'Reversal fixture', 'amount_minor' => '1000'],
+            ['Idempotency-Key' => 'reversal-before-submission'])->assertNoContent();
+        $this->assertDatabaseHas('shop_payments', ['status' => 'canceled']);
+        $this->assertDatabaseHas('financial_control', ['id' => 1, 'frozen' => false]);
+        $this->assertDatabaseHas('case_funding_reports', ['debt_case_id' => $case->id, 'allocated_minor' => 4000]);
+        $this->settlementAction($path, 'initiate')->assertConflict();
+        $this->getJson('/api/v1/transparency')->assertJsonPath('data.transferred_minor', '0');
+    }
+
+    public function test_recovery_releases_shortfall_after_a_submitted_transfer_conclusively_fails(): void
+    {
+        $case = $this->case(5000);
+        $donation = $this->create(5000, $case);
+        $this->simulate($donation, 'success')->assertOk();
+        $this->actAs('administrator');
+        $path = "/api/v1/admin/settlements/$case->id";
+        $this->settlementAction($path, 'initiate')->assertNoContent();
+        $payment = DB::table('shop_payments')->value('id');
+        $this->actAs('administrator');
+        $this->settlementAction("$path/$payment", 'submit')->assertNoContent();
+        $this->postJson("/api/v1/admin/donations/$donation/simulate-return", ['kind' => 'reversal', 'current_password' => 'password', 'reason' => 'Reversal fixture', 'amount_minor' => '1000'],
+            ['Idempotency-Key' => 'reversal-after-submission'])->assertNoContent();
+        $this->getJson('/api/v1/admin/finance')->assertJsonPath('data.frozen', true)->assertJsonCount(1, 'data.deficits');
+        $this->settlementAction("$path/$payment", 'recover')->assertConflict();
+        $this->settlementAction("$path/$payment", 'fail')->assertNoContent();
+        $this->settlementAction("$path/$payment", 'recover', 'restore-funding')->assertNoContent();
+        $this->settlementAction("$path/$payment", 'recover', 'restore-funding')->assertNoContent();
+        $this->getJson('/api/v1/admin/finance')->assertJsonPath('data.frozen', false)->assertJsonCount(0, 'data.deficits');
+        $this->getJson('/api/v1/transparency')->assertJsonPath('data.allocated_minor', '4000')->assertJsonPath('data.transferred_minor', '0');
+    }
+
+    public function test_admin_reports_and_campaign_suspension_preserve_existing_funding(): void
+    {
+        $case = $this->case(5000);
+        $id = $this->create(5000, $case);
+        $this->simulate($id, 'success')->assertOk();
+        $this->getJson('/api/v1/admin/overview')->assertForbidden();
+        $this->getJson('/api/v1/admin/financial-search/donations')->assertForbidden();
+        $this->getJson('/api/v1/admin/audit')->assertForbidden();
+        $this->actAs('administrator');
+        $this->getJson('/api/v1/admin/overview')->assertOk()->assertJsonPath('data.published', 1)
+            ->assertJsonPath('data.funded', 1)->assertJsonPath('data.donations_minor', '5000')->assertJsonPath('data.settlements', 1);
+        $this->getJson('/api/v1/admin/financial-search/donations?id='.$id)->assertOk()->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.amount_minor', '5000')->assertJsonPath('data.0.payment_status', 'confirmed')
+            ->assertJsonMissingPath('data.0.donor_id');
+        $this->getJson('/api/v1/admin/financial-search/allocations')->assertOk()->assertJsonPath('data.0.net_minor', '5000');
+        $this->getJson('/api/v1/admin/financial-search/transactions')->assertOk()->assertJsonCount(2, 'data');
+        $this->getJson('/api/v1/admin/financial-search/refunds')->assertOk()->assertJsonCount(0, 'data');
+        $region = City::find($case->city_id)->region_id;
+        $this->getJson('/api/v1/admin/regions/activity?region_id='.$region)->assertOk()
+            ->assertJsonPath('data.cities.data.0.id', $case->city_id)->assertJsonPath('data.cities.data.0.verified_shops', 1);
+        $this->getJson('/api/v1/admin/regions/activity?coverage=uncovered')->assertOk()->assertJsonCount(0, 'data.cities.data');
+        $review = "/api/v1/admin/cases/$case->id/review";
+        $this->postJson($review, ['decision' => 'suspend', 'revision' => $case->revision])->assertUnprocessable();
+        $this->postJson($review, ['decision' => 'suspend', 'revision' => $case->revision, 'reason' => 'Fixture investigation'])->assertOk();
+        $this->getJson("/api/v1/cases/$case->public_reference")->assertNotFound();
+        $this->postJson($review, ['decision' => 'publish', 'revision' => $case->revision])->assertConflict();
+        $this->postJson($review, ['decision' => 'request_info', 'revision' => $case->revision, 'reason' => 'Fixture investigation'])->assertConflict();
+        $this->assertDatabaseHas('case_funding_reports', ['debt_case_id' => $case->id, 'allocated_minor' => 5000]);
+        $audit = $this->getJson('/api/v1/admin/audit?target_id='.$case->id)->assertOk()
+            ->assertJsonPath('data.0.action', 'case.suspend')->assertJsonPath('data.0.changes.from', 'published')
+            ->assertJsonPath('data.0.changes.to', 'approved')->assertJsonPath('data.0.changes.reason', 'Fixture investigation')->json('data.0.id');
+        $this->expectException(QueryException::class);
+        DB::transaction(fn () => DB::table('audit_logs')->where('id', $audit)->delete());
+    }
+
+    private function settlementAction(string $path, string $action, ?string $key = null, bool $admin = true)
+    {
+        $data = ['action' => $action];
+        if ($admin) {
+            $data['password'] = 'password';
+        }
+        if (in_array($action, ['dispute', 'fail'], true)) {
+            $data['reason'] = 'Simulation fixture';
+        }
+
+        return $this->postJson($path, $data, ['Idempotency-Key' => $key ?? (string) Str::uuid()]);
     }
 
     private function intent(int $amount, ?DebtCase $case, array $overrides = [], ?string $key = null)
@@ -242,12 +414,14 @@ class DonationFundingTest extends TestCase
         ], $body);
     }
 
-    private function actAs(string $role): void
+    private function actAs(string $role): User
     {
         $user = User::factory()->create()->refresh();
         $user->roles()->attach(Role::where('code', $role)->value('id'), ['granted_at' => now()]);
         Auth::forgetGuards();
         $this->actingAs($user, 'web')->withSession(['account_version' => $user->session_version]);
+
+        return $user;
     }
 
     private function case(int $amount, ?int $grade = 4, string $date = '2023-01-01'): DebtCase

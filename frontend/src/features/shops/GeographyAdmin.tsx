@@ -3,6 +3,7 @@ import { useLocale } from '../../app/locale'
 import { Button } from '../../shared/ui/Button'
 import { Card } from '../../shared/ui/Card'
 import { Input } from '../../shared/ui/Input'
+import { adminCopy } from '../admin/copy'
 import copy from './copy'
 import { GeographySelect } from './GeographySelect'
 import { selectClass, useResource, write, type Collection, type Locations, type Place } from './shopApi'
@@ -40,6 +41,7 @@ function PlaceForm({ path, parent, place, onSave }: { path: string; parent?: str
     <Input label={text.arabicName} name="name_ar" defaultValue={place?.name_ar} required maxLength={150} lang="ar" dir="rtl" />
     <Input label={text.source} name="source_url" type="url" defaultValue={place?.source_url} required maxLength={500} dir="ltr" />
     <Input label={text.date} name="source_date" type="date" defaultValue={place?.source_date} required />
+    <Input label={adminCopy[locale].reason} name="reason" required maxLength={500} />
     <label className="flex items-center gap-2"><input type="checkbox" name="active" defaultChecked={place?.active ?? true} />{text.active}</label>
     <div><Button type="submit" disabled={busy}>{busy ? t.loading : text.save}</Button></div>
     {error && <p role="alert" className="text-red-800">{text.invalid}</p>}

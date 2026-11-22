@@ -6,8 +6,8 @@ function buttonClass(variant: 'primary' | 'secondary' = 'primary') {
   return base + (variant === 'primary' ? ' bg-forest text-white hover:bg-forest-dark' : ' border border-line bg-white text-forest hover:bg-mint')
 }
 
-export function Button({ className = '', type = 'button', ...props }: ButtonHTMLAttributes<HTMLButtonElement>) {
-  return <button type={type} className={buttonClass() + ' ' + className} {...props} />
+export function Button({ className = '', type = 'button', variant, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' }) {
+  return <button type={type} className={buttonClass(variant) + ' ' + className} {...props} />
 }
 
 export function ButtonLink({ variant, className = '', ...props }: LinkProps & { variant?: 'primary' | 'secondary' }) {

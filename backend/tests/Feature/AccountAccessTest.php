@@ -94,14 +94,21 @@ class AccountAccessTest extends TestCase
         $this->asSession($unverified)->getJson('/api/v1/admin/users')->assertForbidden();
         $this->asSession($admin)->getJson('/api/v1/admin/users')->assertOk()
             ->assertJsonMissingPath('data.0.password')->assertJsonStructure(['meta' => ['next_cursor', 'prev_cursor']]);
-        $this->patchJson($target, ['status' => 'suspended', 'current_password' => 'incorrect'])->assertUnprocessable();
-        $this->patchJson('/api/v1/admin/users/'.$unverified->id.'/status', ['status' => 'suspended', 'current_password' => 'password'])->assertForbidden();
+        $this->getJson('/api/v1/admin/users?'.http_build_query(['role' => 'donor', 'q' => $donor->email]))
+            ->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $donor->id);
+        $this->getJson('/api/v1/admin/users?'.http_build_query(['q' => '%_']))->assertOk()->assertJsonCount(0, 'data');
+        $this->patchJson($target, ['status' => 'suspended', 'current_password' => 'password'])->assertUnprocessable();
+        $this->patchJson($target, ['status' => 'suspended', 'reason' => 'Account review fixture', 'current_password' => 'incorrect'])->assertUnprocessable();
+        $this->patchJson('/api/v1/admin/users/'.$unverified->id.'/status', ['status' => 'suspended', 'reason' => 'Account review fixture', 'current_password' => 'password'])->assertForbidden();
         $this->storeSession($donor);
-        $this->patchJson($target, ['status' => 'suspended', 'current_password' => 'password'])
+        $this->patchJson($target, ['status' => 'suspended', 'reason' => 'Account review fixture', 'current_password' => 'password'])
             ->assertOk()->assertJsonPath('data.status', 'suspended');
         $this->assertDatabaseMissing('sessions', ['user_id' => $donor->id]);
         $this->assertDatabaseHas('audit_logs', ['actor_id' => $admin->id, 'target_id' => $donor->id, 'action' => 'account.status_changed']);
-        $this->patchJson($target, ['status' => 'active', 'current_password' => 'password'])->assertOk();
+        $this->getJson('/api/v1/admin/audit?target_id='.$donor->id)->assertOk()
+            ->assertJsonPath('data.0.changes.from', 'active')->assertJsonPath('data.0.changes.to', 'suspended')
+            ->assertJsonPath('data.0.changes.reason', 'Account review fixture')->assertJsonMissingPath('data.0.metadata');
+        $this->patchJson($target, ['status' => 'active', 'reason' => 'Account review fixture', 'current_password' => 'password'])->assertOk();
         $this->asSession($donor->fresh())->withSession(['account_version' => $donor->session_version])
             ->getJson('/api/v1/me')->assertUnauthorized();
     }
@@ -146,10 +153,10 @@ class AccountAccessTest extends TestCase
         $this->asSession($admin);
 
         for ($attempt = 0; $attempt < 10; $attempt++) {
-            $this->patchJson($endpoint, ['status' => 'suspended', 'current_password' => 'wrong'])->assertUnprocessable();
+            $this->patchJson($endpoint, ['status' => 'suspended', 'reason' => 'Account review fixture', 'current_password' => 'wrong'])->assertUnprocessable();
         }
 
-        $this->patchJson($endpoint, ['status' => 'suspended', 'current_password' => 'wrong'])
+        $this->patchJson($endpoint, ['status' => 'suspended', 'reason' => 'Account review fixture', 'current_password' => 'wrong'])
             ->assertTooManyRequests()->assertJsonPath('code', 'rate_limited');
         $this->assertSame('active', $donor->fresh()->status);
     }

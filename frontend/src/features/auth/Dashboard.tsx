@@ -7,13 +7,13 @@ import { Card } from '../../shared/ui/Card'
 import { Input } from '../../shared/ui/Input'
 import { Loading } from '../../shared/ui/Loading'
 import copy, { accountDashboard, type AccountRole } from './accountCopy'
-import { AdminAccounts } from './AdminAccounts'
 import { ShopDashboard } from '../shops/ShopDashboard'
-import { GeographyAdmin } from '../shops/GeographyAdmin'
 import { useSession, type User } from './session'
 import { donationCopy } from '../donations/copy'
 
 const CaseDashboard = lazy(() => import('../cases/CaseDashboard').then(module => ({ default: module.CaseDashboard })))
+const SettlementDashboard = lazy(() => import('../settlements/SettlementPages').then(module => ({ default: module.SettlementDashboard })))
+const AdminWorkspace = lazy(() => import('../admin/AdminWorkspace').then(module => ({ default: module.AdminWorkspace })))
 
 function ProfileForm({ user }: { user: User }) {
   const { locale, t } = useLocale()
@@ -79,6 +79,7 @@ function DashboardPage({ role, user }: { role: AccountRole; user: User }) {
   if (!user.roles.includes(role)) return <section className="container-shell py-12">
     <h1 className="display mb-5 text-3xl">{labels.forbidden}</h1><ButtonLink to={accountDashboard(user.roles)}>{labels.dashboard}</ButtonLink>
   </section>
+  if (role === 'administrator' && user.email_verified) return <Suspense fallback={<Loading label={t.loading} />}><AdminWorkspace /></Suspense>
 
   return <section className="container-shell py-10">
     <p className="mb-2 font-semibold text-forest">{labels[role]}</p>
@@ -97,10 +98,7 @@ function DashboardPage({ role, user }: { role: AccountRole; user: User }) {
         </Card>)}
       </div>
     </div>
-    {role === 'administrator' && user.abilities.includes('users.review') && <AdminAccounts />}
     {role === 'shopkeeper' && user.abilities.includes('shops.manageAssigned') && <ShopDashboard />}
-    {role === 'administrator' && user.abilities.includes('shops.review') && <ShopDashboard admin />}
-    {role === 'administrator' && user.abilities.includes('geography.manage') && <GeographyAdmin />}
     {role === 'donor' && user.abilities.includes('donations.create') && <div className="mt-5 flex flex-wrap gap-3">
       <ButtonLink to="/donations">{donationCopy[locale].history}</ButtonLink>
       <ButtonLink variant="secondary" to="/donations/new">{donationCopy[locale].donate}</ButtonLink>
@@ -108,7 +106,7 @@ function DashboardPage({ role, user }: { role: AccountRole; user: User }) {
     <Suspense fallback={<Loading label={t.loading} />}>
       {role === 'beneficiary' && user.abilities.includes('applications.submit') && <CaseDashboard audience="beneficiary" />}
       {role === 'shopkeeper' && user.abilities.includes('verifications.respondAssigned') && <CaseDashboard audience="shop" />}
-      {role === 'administrator' && user.abilities.includes('applications.review') && <CaseDashboard audience="admin" />}
+      {role === 'shopkeeper' && user.abilities.includes('settlements.confirmAssigned') && <SettlementDashboard />}
     </Suspense>
   </section>
 }
@@ -121,7 +119,7 @@ export function Dashboard() {
   return <Routes>
     <Route index element={<Navigate to={accountDashboard(user.roles)} replace />} />
     {(['donor', 'beneficiary', 'shopkeeper', 'administrator'] as const).map(role =>
-      <Route path={role} key={role} element={<DashboardPage role={role} user={user} />} />)}
+      <Route path={role === 'administrator' ? 'administrator/*' : role} key={role} element={<DashboardPage role={role} user={user} />} />)}
     <Route path="*" element={<Navigate to={accountDashboard(user.roles)} replace />} />
   </Routes>
 }
