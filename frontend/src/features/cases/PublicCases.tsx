@@ -10,6 +10,7 @@ import { DiscoveryCaseCard, UrgencyExplanation } from '../discovery/DiscoveryCar
 import { toMajor, toMinor, type Discovery, type PublicCase } from '../discovery/types'
 import { GeographySelect } from '../shops/GeographySelect'
 import { selectClass, useResource } from '../shops/shopApi'
+import { donationCopy } from '../donations/copy'
 
 type Catalog = { data: PublicCase[]; meta: { page: number; last_page: number; total: number } }
 const statuses = ['open', 'funded', 'settled'] as const
@@ -81,6 +82,7 @@ export function PublicCases({ urgent = false }: { urgent?: boolean }) {
       <ButtonLink to={urgent ? '/cases' : '/urgent'} variant="secondary">{urgent ? text.browse : text.urgentTitle}</ButtonLink>
     </div>
     {overview?.data && <UrgencyExplanation policy={overview.data.data.urgency_policy} />}
+    {overview?.data?.data.simulated && <div><ButtonLink to="/donations/new">{donationCopy[locale].donate}</ButtonLink></div>}
     {overview?.failed && <p role="alert" className="text-red-800">{t.failed} <Button onClick={() => setRetry(value => value + 1)}>{text.retry}</Button></p>}
     <Filters key={filterKey.toString()} params={params} urgent={urgent} apply={setParams} />
     {result?.failed ? <p role="alert" className="text-red-800">{t.failed} <Button onClick={() => setRetry(value => value + 1)}>{text.retry}</Button></p>

@@ -3,12 +3,14 @@
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DebtApplicationController;
+use App\Http\Controllers\DonationController;
 use App\Http\Controllers\GeographyController;
 use App\Http\Controllers\PublicDiscoveryController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\VerificationController;
 use App\Http\Middleware\EnsureActiveAccount;
 use App\Models\DebtCase;
+use App\Models\Donation;
 use App\Models\Shop;
 use Illuminate\Support\Facades\Route;
 
@@ -18,8 +20,17 @@ Route::get('/v1/{level}', [GeographyController::class, 'publicIndex'])->whereIn(
 Route::get('/v1/cases', [PublicDiscoveryController::class, 'index']);
 Route::get('/v1/cases/{reference}', [PublicDiscoveryController::class, 'show'])->whereUuid('reference');
 Route::get('/v1/discovery', [PublicDiscoveryController::class, 'home']);
+Route::get('/v1/donation-policies/current', [DonationController::class, 'policy']);
+Route::post('/v1/webhooks/payments/simulator', [DonationController::class, 'webhook'])->middleware('throttle:120,1');
 Route::prefix('v1')->middleware(['auth:sanctum', EnsureActiveAccount::class])->group(function () use ($geographyLevels) {
     Route::get('/me', [AuthController::class, 'me']);
+    Route::get('/donations', [DonationController::class, 'index'])->can('create', Donation::class);
+    Route::post('/donations', [DonationController::class, 'create'])->can('create', Donation::class)->middleware('throttle:30,1');
+    Route::get('/donations/{donation}', [DonationController::class, 'show'])->whereUuid('donation')->can('view', 'donation');
+    Route::post('/donations/{donation}/simulation', [DonationController::class, 'simulate'])
+        ->whereUuid('donation')->can('view', 'donation')->middleware('throttle:30,1');
+    Route::post('/admin/donations/{donation}/simulate-return', [DonationController::class, 'simulateReturn'])
+        ->whereUuid('donation')->can('manageReturns', Donation::class)->middleware('throttle:30,1');
     Route::patch('/me', [AccountController::class, 'update']);
     Route::post('/email/verification-notification', [VerificationController::class, 'resend'])->middleware('throttle:3,1');
     Route::get('/admin/users', [AccountController::class, 'index']);

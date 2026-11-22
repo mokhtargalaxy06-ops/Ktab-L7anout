@@ -9,7 +9,7 @@ class Access
     public const PUBLIC_ROLES = ['donor', 'beneficiary', 'shopkeeper'];
 
     private const ABILITIES = [
-        'donor' => ['cases.browse', 'donations.viewOwn'],
+        'donor' => ['cases.browse', 'donations.viewOwn', 'donations.create'],
         'beneficiary' => ['applications.submit', 'applications.viewOwn', 'applications.uploadOwn'],
         'shopkeeper' => ['shops.manageAssigned', 'verifications.viewAssigned', 'verifications.respondAssigned', 'settlements.confirmAssigned'],
         'administrator' => ['users.review', 'users.changeStatus', 'applications.review', 'cases.manage', 'financialRecords.review', 'geography.manage', 'shops.review'],

@@ -11,6 +11,7 @@ class PublicDiscovery
     private function validFunding(): Builder
     {
         return DB::table('case_funding_reports as report')
+            ->where('report.simulated', SimulatedProvider::enabled())
             ->join('debt_cases as approved', 'approved.id', '=', 'report.debt_case_id')
             ->where('approved.approved_minor', '>', 0)
             ->where('report.settled_minor', '>=', 0)
@@ -42,7 +43,8 @@ class PublicDiscovery
             ->leftJoinSub($this->validFunding(), 'funding', 'funding.debt_case_id', '=', 'c.id')
             ->where(fn (Builder $query) => $query->whereNotNull('funding.debt_case_id')
                 ->orWhereNotExists(fn (Builder $report) => $report->selectRaw('1')->from('case_funding_reports')
-                    ->whereColumn('case_funding_reports.debt_case_id', 'c.id')))
+                    ->whereColumn('case_funding_reports.debt_case_id', 'c.id')
+                    ->when(! SimulatedProvider::enabled(), fn ($report) => $report->where('simulated', false))))
             ->where('c.status', 'published')->where('c.flagged', false)
             ->whereNotNull('c.public_reference')->where('c.published_at', '<=', now())->where('c.approved_minor', '>', 0)
             ->where('s.status', 'verified')->whereColumn('s.revision', 'c.verified_shop_revision')
@@ -122,7 +124,7 @@ class PublicDiscovery
             ->selectRaw('COUNT(CASE WHEN c.approved_minor > 0 AND funding.settled_minor >= c.approved_minor THEN 1 END) AS fully_settled_cases')
             ->selectRaw('COALESCE(SUM(funding.settled_minor), 0) AS settled_minor, COALESCE(SUM(funding.allocated_minor), 0) AS allocated_minor')
             ->first();
-        $received = DB::table('funding_receipt_reports')->where('received_minor', '>', 0)
+        $received = DB::table('funding_receipt_reports')->where('simulated', SimulatedProvider::enabled())->where('received_minor', '>', 0)
             ->selectRaw('COALESCE(SUM(received_minor), 0) AS total')->first();
 
         return [

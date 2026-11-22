@@ -7,6 +7,7 @@ import { useResource } from '../shops/shopApi'
 import { discoveryCopy } from './copy'
 import { DiscoveryCaseCard, UrgencyExplanation } from './DiscoveryCards'
 import { mad, type Discovery, type PublicCase } from './types'
+import { donationCopy } from '../donations/copy'
 
 function CaseSection({ title, path, cases, link }: { title: string; path: string; cases: PublicCase[]; link: string }) {
   const { locale } = useLocale()
@@ -32,6 +33,10 @@ export function HomeDiscovery() {
     <div className="container-shell grid gap-10 py-10 md:py-14">
       <section className="grid gap-4">
         <h2 className="display text-3xl sm:text-4xl">{text.impact}</h2>
+        {data?.simulated && <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+          <p className="font-semibold text-amber-900">{donationCopy[locale].banner}</p>
+          <ButtonLink to="/donations/new">{donationCopy[locale].donate}</ButtonLink>
+        </div>}
         {result?.failed ? <div role="alert">{t.failed} <Button onClick={() => setRetry(value => value + 1)}>{text.retry}</Button></div>
           : !data?.statistics ? <Loading label={t.loading} /> : <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {([

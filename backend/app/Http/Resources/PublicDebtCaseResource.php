@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Services\SimulatedProvider;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -24,6 +25,7 @@ class PublicDebtCaseResource extends JsonResource
             'progress' => intdiv((int) $record->collected_minor * 100, (int) $record->approved_minor),
             'urgent' => $record->remaining_minor > 0 && $record->urgency_score !== null && $record->urgency_score >= $threshold,
             'verified' => true,
+            'simulated' => SimulatedProvider::enabled(),
             'currency' => 'MAD',
         ];
     }

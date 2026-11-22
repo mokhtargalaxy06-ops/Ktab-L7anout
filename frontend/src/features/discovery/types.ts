@@ -14,6 +14,7 @@ export type PublicCase = {
   progress: number
   urgent: boolean
   verified: boolean
+  simulated?: boolean
   currency: 'MAD'
   updates?: { type: 'confirm' | 'approve' | 'publish' | 'funding'; date: string }[]
 }
@@ -24,6 +25,7 @@ export type UrgencyPolicy = {
   urgent_threshold: number
 }
 export type Discovery = {
+  simulated?: boolean
   statistics: { families_helped: number; fully_settled_cases: number; settled_minor: string; allocated_minor: string; received_minor: string; currency: 'MAD' }
   recent: PublicCase[]
   urgent: PublicCase[]

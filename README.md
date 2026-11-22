@@ -60,7 +60,15 @@ See the [official geography sources and coverage](docs/geography-data.md). Shop 
 
 For beneficiary and shop evidence on debt applications, run `php artisan shops:scan-documents --cases`. A beneficiary needs scanned evidence before submitting an application. Reviewers route it to the shop and can publish only after the assigned shop owner confirms the amount and an administrator approves it.
 
-The public discovery pages are `/cases` and `/urgent`. Reviewers can set an anonymized story and urgency grades from the administrator case dashboard. Configure the urgency weights, normalization caps, and threshold in `backend/config/discovery.php`. The homepage displays database reporting totals, which start at zero and depend on future financial workflows to populate them.
+The public discovery pages are `/cases` and `/urgent`. Reviewers can set an anonymized story and urgency grades from the administrator case dashboard. Configure the urgency weights, normalization caps, and threshold in `backend/config/discovery.php`.
+
+### Simulated donations
+
+Use a dedicated local PostgreSQL database and apply migrations. Set `FUNDING_SIMULATOR_ENABLED=true` in `backend/.env` while running with `APP_ENV=local`. Sign in as a verified donor to open `/donations/new`. The checkout uses simulated outcomes and collects no payment details. Use a random simulator secret of at least 32 characters for signed webhook testing.
+
+Run `php artisan funding:process` to retry waiting receipts and confirm queued simulated refunds. For recurring processing, run `php artisan schedule:work` separately. Simulation remains disabled in production and its totals are labeled and separated from live reporting. Shop payout dispatch and real payment integration are outside Phase 6.
+
+To run the two-process PostgreSQL concurrency test, create a separate disposable database whose name starts with `mdr_funding_concurrency_`, migrate it, and set `FUNDING_CONCURRENCY_DATABASE` to that name before running PHPUnit. It uses committed fixtures and retains them because the ledger protects financial history from deletion.
 
 ## Start the frontend
 

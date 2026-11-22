@@ -6,12 +6,12 @@ use App\Http\Requests\GeographyRequest;
 use App\Models\City;
 use App\Models\Locality;
 use App\Models\Region;
+use App\Services\FinancialLock;
 use App\Support\Access;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class GeographyController extends Controller
@@ -50,7 +50,7 @@ class GeographyController extends Controller
         }
 
         try {
-            DB::transaction(fn () => $record->fill($attributes)->save());
+            FinancialLock::run(fn () => $record->fill($attributes)->save());
         } catch (UniqueConstraintViolationException) {
             throw ValidationException::withMessages(['code' => __('shops.duplicate_code')]);
         }

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { isAxiosError } from 'axios'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { Link, useNavigate } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { z } from 'zod'
 import { useLocale } from '../../app/locale'
 import { api, getCsrfCookie, type ApiError } from '../../shared/api/client'
@@ -17,6 +17,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
   const { t, locale } = useLocale()
   const labels = copy[locale]
   const navigate = useNavigate()
+  const location = useLocation()
   const { setUser } = useSession()
   const [submissionError, setSubmissionError] = useState('')
   const schema = z.object({
@@ -37,7 +38,9 @@ export function AuthPage({ register = false }: { register?: boolean }) {
       await getCsrfCookie()
       const { data } = await api.post<{ data: User }>(register ? '/register' : '/login', register ? { ...values, locale } : values)
       setUser(data.data)
-      void navigate(accountDashboard(data.data.roles), { replace: true })
+      const returnTo: unknown = location.state?.returnTo
+      const fundingPath = typeof returnTo === 'string' && /^\/donations(?:[/?]|$)/.test(returnTo)
+      void navigate(fundingPath && data.data.abilities.includes('donations.create') ? returnTo : accountDashboard(data.data.roles), { replace: true })
     } catch (error) {
       const response = isAxiosError<ApiError>(error) ? error.response : undefined
       if (response?.status === 422 && response.data?.errors) {

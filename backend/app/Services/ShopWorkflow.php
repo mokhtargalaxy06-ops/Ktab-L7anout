@@ -30,7 +30,7 @@ class ShopWorkflow
 
     public function update(User $actor, Shop $shop, array $profile): Shop
     {
-        return DB::transaction(function () use ($actor, $shop, $profile) {
+        return FinancialLock::run(function () use ($actor, $shop, $profile) {
             $shop = $this->lockedShop($shop);
             Gate::forUser($actor)->authorize('update', $shop);
             $shop->fill($this->profile($profile));
@@ -84,7 +84,7 @@ class ShopWorkflow
 
     public function review(User $actor, Shop $shop, array $review): Shop
     {
-        return DB::transaction(function () use ($actor, $shop, $review) {
+        return FinancialLock::run(function () use ($actor, $shop, $review) {
             $shop = $this->lockedShop($shop);
             abort_unless((int) $review['revision'] === $shop->revision, 409);
             $decision = $review['decision'];

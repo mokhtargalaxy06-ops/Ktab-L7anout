@@ -11,6 +11,7 @@ import { AdminAccounts } from './AdminAccounts'
 import { ShopDashboard } from '../shops/ShopDashboard'
 import { GeographyAdmin } from '../shops/GeographyAdmin'
 import { useSession, type User } from './session'
+import { donationCopy } from '../donations/copy'
 
 const CaseDashboard = lazy(() => import('../cases/CaseDashboard').then(module => ({ default: module.CaseDashboard })))
 
@@ -100,6 +101,10 @@ function DashboardPage({ role, user }: { role: AccountRole; user: User }) {
     {role === 'shopkeeper' && user.abilities.includes('shops.manageAssigned') && <ShopDashboard />}
     {role === 'administrator' && user.abilities.includes('shops.review') && <ShopDashboard admin />}
     {role === 'administrator' && user.abilities.includes('geography.manage') && <GeographyAdmin />}
+    {role === 'donor' && user.abilities.includes('donations.create') && <div className="mt-5 flex flex-wrap gap-3">
+      <ButtonLink to="/donations">{donationCopy[locale].history}</ButtonLink>
+      <ButtonLink variant="secondary" to="/donations/new">{donationCopy[locale].donate}</ButtonLink>
+    </div>}
     <Suspense fallback={<Loading label={t.loading} />}>
       {role === 'beneficiary' && user.abilities.includes('applications.submit') && <CaseDashboard audience="beneficiary" />}
       {role === 'shopkeeper' && user.abilities.includes('verifications.respondAssigned') && <CaseDashboard audience="shop" />}

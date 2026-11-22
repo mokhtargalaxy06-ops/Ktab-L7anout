@@ -97,21 +97,27 @@ Paths in the table are relative to `/api/v1`.
 
 ## Donation example
 
+Phase 6 exposes `GET /donation-policies/current`, `GET /donations`, `POST /donations`, and `GET /donations/{donation}` under `/api/v1`. The authenticated donor creates an intent with `scope`, `amount_minor`, `currency`, `policy_version`, and `case_reference` (the public case UUID, only for specific donations). POST creation and administrator return simulation require `Idempotency-Key`. A repeat with identical parameters returns the existing intent. Changed parameters with the same key return 409. History is cursor-paginated and scoped to the donor. Detail separates captured, allocated, unallocated, reserved return, and confirmed return amounts, and shows per-allocation shop settlement states.
+
+In enabled local or test environments, `POST /donations/{donation}/simulation` accepts `success`, `pending`, `failed`, or `cancelled`. It always uses the server-recorded amount and MAD. Verified administrators can use `POST /admin/donations/{donation}/simulate-return` with `kind=refund|reversal` and a positive integer-string `amount_minor`. There is no shop payout dispatch endpoint in Phase 6.
+
+The simulator webhook at `POST /webhooks/payments/simulator` accepts `event_id`, `reference`, `outcome`, `amount_minor`, and `currency`. Sign the exact raw body as HMAC-SHA256 over the Unix timestamp, a period, and the body, using `FUNDING_SIMULATOR_SECRET`. Send the timestamp and hex signature via `X-Simulator-Timestamp` and `X-Simulator-Signature`. Requests outside a five-minute window are denied. Replaying the same event is harmless, and conflicting event payloads return 409.
+
 `POST /api/v1/donations` with an idempotency key accepts the following body. Use `urgent_pool` without `debt_case_id` for pooled giving.
 
 ```json
 {
   "scope": "specific",
-  "debt_case_id": "df006b8f-3b0f-4a84-85ab-8468a20432c8",
+  "case_reference": "df006b8f-3b0f-4a84-85ab-8468a20432c8",
   "amount_minor": "25000",
   "currency": "MAD",
   "policy_version": "mvp-1"
 }
 ```
 
-A 201 response wraps the new resource in `data` and includes its identifier, `pending` status, amount, scope, policy version, and simulated checkout action with the payment attempt ID. Reject stale policy versions with 409 so the donor can review the current policy. A checkout return can navigate the donor to the detail view. Only the signed callback or verified reconciliation can confirm payment.
+A 201 response wraps the new intent in `data` and includes its identifier, `payment_status`, `allocation_status`, amount, scope, policy version, and simulator marker. Stale policy versions return 409. Browser navigation to a result page does not confirm payment.
 
-The donation detail returns intent status `pending`, `confirmed`, or `expired`; captured, allocated, settled, and returned amounts; and redacted allocation entries with case ID, aggregate funded amount, and confirmed shop settlement attributable to that donation. Return details may show `requested`, `submitted`, `unknown`, `confirmed`, `failed`, or `canceled`. Amounts reflect different stages and should not be added together. Historical settlements remain visible after reversals. Keep internal payment references, evidence, and beneficiary identity out of donor responses.
+The donation detail returns payment status `pending`, `confirmed`, `failed`, or `cancelled` and a separate allocation status. It includes the captured, allocated, and returned amounts and redacted allocation entries with public case references and shop settlement lines. Simulated returns can be `requested`, `confirmed`, or `canceled`. These amounts describe different stages. Historical settlements remain visible after reversals. Internal payment references, evidence, and beneficiary identity stay private.
 
 ## Callback and contract boundaries
 

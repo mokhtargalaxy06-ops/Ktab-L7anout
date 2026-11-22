@@ -8,6 +8,7 @@ import { Loading } from '../../shared/ui/Loading'
 import { useResource } from '../shops/shopApi'
 import { discoveryCopy } from './copy'
 import { FundingMeter } from './DiscoveryCards'
+import { donationCopy } from '../donations/copy'
 import { mad, type PublicCase } from './types'
 
 export function CaseDetail() {
@@ -39,7 +40,10 @@ export function CaseDetail() {
             <p className="text-3xl font-bold text-forest"><bdi>{mad(record.amount_minor, locale)}</bdi></p>
             <FundingMeter record={record} />
             <p>{text.remaining} <bdi className="font-semibold">{mad(record.remaining_minor, locale)}</bdi></p>
-            <p className="text-sm text-muted">{t.note}</p>
+            {record.simulated ? <>
+              <p className="text-sm text-amber-900">{donationCopy[locale].banner}</p>
+              {record.remaining_minor !== '0' && <div><ButtonLink to={'/donations/new?case=' + record.id}>{donationCopy[locale].donate}</ButtonLink></div>}
+            </> : <p className="text-sm text-muted">{t.note}</p>}
           </Card>
         </div>
         <Card className="grid gap-3 p-6 sm:p-8">

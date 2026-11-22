@@ -8,6 +8,7 @@ use App\Http\Resources\PublicDebtCaseResource;
 use App\Models\DebtCase;
 use App\Services\DebtWorkflow;
 use App\Services\PublicDiscovery;
+use App\Services\SimulatedProvider;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -47,6 +48,7 @@ class PublicDiscoveryController extends Controller
     {
         return response()->json(['data' => [
             'statistics' => $this->discovery->statistics(),
+            'simulated' => SimulatedProvider::enabled(),
             'recent' => PublicDebtCaseResource::collection($this->discovery->ordered($this->discovery->catalog(), false)->limit(3)->get())->resolve(),
             'urgent' => PublicDebtCaseResource::collection($this->discovery->ordered($this->discovery->catalog(['urgent' => '1']), true)->limit(3)->get())->resolve(),
             'urgency_policy' => $this->discovery->policy(),

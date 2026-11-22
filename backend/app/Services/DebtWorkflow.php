@@ -17,7 +17,7 @@ class DebtWorkflow
 {
     public function assessDiscovery(User $actor, DebtCase $case, array $assessment): void
     {
-        DB::transaction(function () use ($actor, $case, $assessment) {
+        FinancialLock::run(function () use ($actor, $case, $assessment) {
             $case = DebtCase::lockForUpdate()->findOrFail($case->id);
             Gate::forUser($actor)->authorize('review', DebtCase::class);
             abort_if($case->profile->user_id === $actor->id, 403);
@@ -68,7 +68,7 @@ class DebtWorkflow
 
     public function transition(User $actor, DebtCase $case, string $audience, string $action, array $data = []): DebtCase
     {
-        return DB::transaction(function () use ($actor, $case, $audience, $action, $data) {
+        return FinancialLock::run(function () use ($actor, $case, $audience, $action, $data) {
             $case = DebtCase::lockForUpdate()->findOrFail($case->id);
             $shop = Shop::lockForUpdate()->findOrFail($case->shop_id);
             $case->setRelation('shop', $shop);

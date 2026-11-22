@@ -51,6 +51,10 @@ Phase 4 implements application-specific amounts, household size and situation, v
 
 ## Financial records
 
+Phase 6 implements the simulated receipt, allocation, payout schema, return, and immutable journal tables. The simulator has one payment attempt per intent and binds its unique reference to the server-stored amount. Creator idempotency is retained on the intent and allocation idempotency on the immutable run. The processor automatically retries waiting receipts and confirms queued simulated refunds. The financial lock also serializes changes to case and shop eligibility and geography. Journal, allocation decision, event inbox, and payout lines are append-only, and financial records cannot be deleted through normal runtime SQL operations. Future migrations should use a separate database role.
+
+Financial reports are marked as simulated and included in the public totals only when the development simulator is enabled. A simulated writer refuses to overwrite an existing live case report.
+
 Phase 5 adds read-side projections `case_funding_reports` (case FK and primary key, net allocated and evidenced settled minor units, update time) and `funding_receipt_reports` (receipt UUID key and confirmed received minor units). The public API has no projection write path. These tables start empty and will be populated by the planned financial ledger workflows. They are separate from the immutable financial journal.
 
 Cases have a unique random public reference independent of their internal ID, a public story key, and two optional reviewer grades. Each public assessment audit event records the story, grades, and case revision. Reopening a case for information clears its public story selection and grades. Public reads accept only reports with a positive approved cap and `0 ≤ settled ≤ allocated ≤ approved`. An inconsistent report is excluded from impact totals and its case from discovery until the report is corrected.
