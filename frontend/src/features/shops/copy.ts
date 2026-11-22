@@ -1,0 +1,38 @@
+const copy = {
+  fr: {
+    refresh: 'Actualiser',
+    shops: 'Mes épiceries', shopReview: 'Vérification des épiceries', geography: 'Référentiel géographique',
+    register: 'Inscrire une épicerie', selectShop: 'Sélectionner une épicerie', shopName: 'Nom de l’épicerie',
+    region: 'Région', city: 'Ville ou commune', locality: 'Quartier ou localité', choose: 'Sélectionner',
+    phone: 'Téléphone professionnel', email: 'E-mail professionnel (facultatif)', save: 'Enregistrer',
+    shopProfile: 'Profil de l’épicerie', documents: 'Justificatifs', upload: 'Envoyer le justificatif',
+    file: 'Fichier PDF, JPEG ou PNG', download: 'Télécharger', reason: 'Motif', inbox: 'Demandes de vérification de dettes',
+    noRecords: 'Aucun résultat.', confirm: 'Confirmer le montant', dispute: 'Contester', verified: 'Vérifiée', pending: 'En attente',
+    rejected: 'Rejetée', suspended: 'Suspendue', closed: 'Fermée', available: 'Disponible', quarantined: 'En quarantaine',
+    confirmed: 'Confirmée', disputed: 'Contestée', verify: 'Vérifier', reject: 'Rejeter', suspend: 'Suspendre',
+    reset: 'Nouvelle fiche', code: 'Code administratif', source: 'Lien vers la source officielle', date: 'Date de la source',
+    frenchName: 'Nom français', arabicName: 'Nom arabe', active: 'Actif', reference: 'Référence interne', amount: 'Montant en centimes (MAD)',
+    newRequest: 'Envoyer pour vérification', next: 'Page suivante', previous: 'Page précédente',
+    evidenceNeeded: 'Une version modifiée doit être vérifiée de nouveau avec un justificatif analysé.',
+    selectRecord: 'Fiche à modifier', edit: 'Modifier', invalid: 'Vérifiez les informations et les justificatifs.',
+  },
+  ar: {
+    refresh: 'تحديث',
+    shops: 'متاجري', shopReview: 'التحقق من المتاجر', geography: 'السجل الجغرافي',
+    register: 'تسجيل متجر', selectShop: 'اختر متجراً', shopName: 'اسم المتجر',
+    region: 'الجهة', city: 'المدينة أو الجماعة', locality: 'الحي أو المنطقة', choose: 'اختر',
+    phone: 'هاتف العمل', email: 'البريد الإلكتروني للعمل (اختياري)', save: 'حفظ',
+    shopProfile: 'ملف المتجر', documents: 'المستندات', upload: 'إرسال المستند',
+    file: 'ملف PDF أو JPEG أو PNG', download: 'تنزيل', reason: 'السبب', inbox: 'طلبات التحقق من الديون',
+    noRecords: 'لا توجد نتائج.', confirm: 'تأكيد المبلغ', dispute: 'الاعتراض', verified: 'تم التحقق', pending: 'قيد الانتظار',
+    rejected: 'مرفوض', suspended: 'معلّق', closed: 'مغلق', available: 'متاح', quarantined: 'قيد الفحص',
+    confirmed: 'مؤكد', disputed: 'متنازع عليه', verify: 'التحقق', reject: 'رفض', suspend: 'تعليق',
+    reset: 'سجل جديد', code: 'الرمز الإداري', source: 'رابط المصدر الرسمي', date: 'تاريخ المصدر',
+    frenchName: 'الاسم بالفرنسية', arabicName: 'الاسم بالعربية', active: 'نشط', reference: 'المرجع الداخلي', amount: 'المبلغ بالسنتيم (درهم)',
+    newRequest: 'إرسال للتحقق', next: 'الصفحة التالية', previous: 'الصفحة السابقة',
+    evidenceNeeded: 'تتطلب البيانات المعدلة تحققاً جديداً ومستنداً مفحوصاً.',
+    selectRecord: 'السجل المراد تعديله', edit: 'تعديل', invalid: 'راجع البيانات والمستندات.',
+  },
+}
+
+export default copy

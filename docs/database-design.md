@@ -26,6 +26,8 @@ erDiagram
 
 Phase 2 adds `users.session_version` (integer, default 1) to invalidate stale sessions after password resets or account status changes. It also introduces `audit_logs` for administrator provisioning, status transitions, and password resets.
 
+Phase 3 adds sourced bilingual geography, shop memberships, and private shop documents. Shops reference a required city and optional locality. A composite foreign key ensures the locality belongs to that city, and the city determines the region. Shop profiles have a review revision and support `rejected` in addition to the statuses below. `shop_documents` records the shop, uploader, profile revision, private key, digest, media type, size, and scan status. `shop_debt_requests` records an operator-assigned request with a shop-scoped unique reference, integer MAD minor units, and one terminal owner response. These requests are a pre-campaign verification inbox.
+
 | Table | Columns, relationships, and constraints | Additional indexes |
 | --- | --- | --- |
 | `users` | Unique normalized email, password hash, locale `fr\|ar`, status `active\|suspended\|closed`, verification timestamps | Unique normalized email |

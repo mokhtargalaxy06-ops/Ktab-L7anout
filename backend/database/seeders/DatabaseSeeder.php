@@ -8,6 +8,6 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Required reference roles are created by their migration.
+        $this->call(MoroccoGeographySeeder::class);
     }
 }

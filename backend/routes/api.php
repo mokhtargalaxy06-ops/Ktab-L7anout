@@ -2,15 +2,38 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GeographyController;
+use App\Http\Controllers\ShopController;
 use App\Http\Controllers\VerificationController;
 use App\Http\Middleware\EnsureActiveAccount;
+use App\Models\Shop;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', fn () => response()->json(['data' => ['status' => 'ok']])->header('Cache-Control', 'no-store'));
-Route::prefix('v1')->middleware(['auth:sanctum', EnsureActiveAccount::class])->group(function () {
+$geographyLevels = ['regions', 'cities', 'localities'];
+Route::get('/v1/{level}', [GeographyController::class, 'publicIndex'])->whereIn('level', $geographyLevels);
+Route::prefix('v1')->middleware(['auth:sanctum', EnsureActiveAccount::class])->group(function () use ($geographyLevels) {
     Route::get('/me', [AuthController::class, 'me']);
     Route::patch('/me', [AccountController::class, 'update']);
     Route::post('/email/verification-notification', [VerificationController::class, 'resend'])->middleware('throttle:3,1');
     Route::get('/admin/users', [AccountController::class, 'index']);
     Route::patch('/admin/users/{user}/status', [AccountController::class, 'status'])->middleware('throttle:account-status');
+
+    Route::get('/shop/shops', [ShopController::class, 'index']);
+    Route::post('/shop/shops', [ShopController::class, 'create'])->can('create', Shop::class);
+    Route::get('/shops/{shop}', [ShopController::class, 'show'])->whereUuid('shop');
+    Route::patch('/shop/shops/{shop}', [ShopController::class, 'update'])->whereUuid('shop')->can('update', 'shop');
+    Route::post('/shop/shops/{shop}/documents', [ShopController::class, 'upload'])
+        ->whereUuid('shop')->can('update', 'shop')->middleware('throttle:shop-evidence');
+    Route::get('/shops/{shop}/documents/{document}', [ShopController::class, 'download'])->whereUuid(['shop', 'document']);
+    Route::get('/shops/{shop}/debt-requests', [ShopController::class, 'debtRequests'])->whereUuid('shop');
+    Route::post('/shop/shops/{shop}/debt-requests/{debt}/decision', [ShopController::class, 'respondDebt'])
+        ->whereUuid(['shop', 'debt'])->can('respond', 'shop');
+
+    Route::get('/admin/shops', [ShopController::class, 'adminIndex']);
+    Route::post('/admin/shops/{shop}/review', [ShopController::class, 'review'])->whereUuid('shop')->can('review', Shop::class);
+    Route::post('/admin/shops/{shop}/debt-requests', [ShopController::class, 'requestDebt'])->whereUuid('shop')->can('review', Shop::class);
+    Route::get('/admin/geography/{level}', [GeographyController::class, 'adminIndex'])->whereIn('level', $geographyLevels);
+    Route::post('/admin/geography/{level}', [GeographyController::class, 'save'])->whereIn('level', $geographyLevels);
+    Route::patch('/admin/geography/{level}/{id}', [GeographyController::class, 'save'])->whereIn('level', $geographyLevels)->whereUuid('id');
 });

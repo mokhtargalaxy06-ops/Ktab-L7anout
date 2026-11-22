@@ -1,5 +1,11 @@
 # Business rules
 
+## Shop registration and verification inbox
+
+A verified-email shopkeeper registers a shop and becomes its owner. An administrator reviews the current profile revision and its scanned supporting evidence. An owner edit restarts review, and uploading new evidence can resubmit a rejected profile. A suspension prevents debt decisions until the shop is verified again.
+
+An administrator can send a verified shop a debt reference and an exact amount in MAD minor units. Only the assigned owner's active account can confirm that amount or dispute it with a reason. Each request has one final response and is recorded separately from future case publication and settlement.
+
 ## Case verification and publication
 
 ```mermaid

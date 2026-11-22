@@ -12,7 +12,7 @@ class Access
         'donor' => ['cases.browse', 'donations.viewOwn'],
         'beneficiary' => ['applications.submit', 'applications.viewOwn', 'applications.uploadOwn'],
         'shopkeeper' => ['shops.manageAssigned', 'verifications.viewAssigned', 'verifications.respondAssigned', 'settlements.confirmAssigned'],
-        'administrator' => ['users.review', 'users.changeStatus', 'applications.review', 'cases.manage', 'financialRecords.review'],
+        'administrator' => ['users.review', 'users.changeStatus', 'applications.review', 'cases.manage', 'financialRecords.review', 'geography.manage', 'shops.review'],
     ];
 
     public static function abilities(User $user): array

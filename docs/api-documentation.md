@@ -26,7 +26,21 @@ The current release exposes `GET /api/health` for liveness and the following acc
 | `GET /api/v1/admin/users` | Cursor-paginated account review for verified administrators |
 | `PATCH /api/v1/admin/users/{user}/status` | Verified administrator submits status and their own current password. Admin targets are protected. Status changes revoke prior sessions and emit an audit event. Closed accounts are terminal |
 
-The remaining case, shop, and financial endpoints below describe the planned contract. The listed role abilities do not grant access to a specific future resource without the corresponding ownership or assignment policy.
+### Geography and shop API
+
+| Method and path | Access and behavior |
+| --- | --- |
+| `GET /api/v1/regions`, `GET /api/v1/cities?region_id=…`, `GET /api/v1/localities?city_id=…` | Public active geography, with French and Arabic names |
+| `GET, POST /api/v1/admin/geography/{level}`, `PATCH /api/v1/admin/geography/{level}/{id}` | Verified administrator. Levels are regions, cities, and localities. Child reads require the corresponding parent filter. Creation requires a source URL, source date, code, names, active flag, and parent for children. Edits preserve IDs, codes and parents |
+| `GET, POST /api/v1/shop/shops`, `PATCH /api/v1/shop/shops/{shop}` | Verified shopkeeper. List owned shops or save a profile with name, location, and contact information |
+| `GET /api/v1/admin/shops`, `GET /api/v1/shops/{shop}` | Administrator review list. Shop detail is restricted to its owner or a verified administrator |
+| `POST /api/v1/shop/shops/{shop}/documents`, `GET /api/v1/shops/{shop}/documents/{document}` | Owners upload to quarantine. Owners and administrators may download scanned evidence as an attachment |
+| `POST /api/v1/admin/shops/{shop}/review` | Administrator submits decision, current revision, and a reason for rejection or suspension |
+| `GET /api/v1/shops/{shop}/debt-requests` | Owner or administrator lists the shop's requests |
+| `POST /api/v1/admin/shops/{shop}/debt-requests` | Administrator submits reference and integer-string `amount_minor` for a verified shop |
+| `POST /api/v1/shop/shops/{shop}/debt-requests/{debt}/decision` | Owner of a verified shop confirms the stated amount or disputes it with a reason |
+
+Shop and debt inbox lists are cursor-paginated. The remaining case and financial endpoints below describe the planned contract. Future resource policies must enforce ownership or assignment.
 
 Paths in the table are relative to `/api/v1`.
 

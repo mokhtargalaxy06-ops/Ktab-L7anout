@@ -34,6 +34,7 @@ Set `DB_PASSWORD` in `backend/.env` to the password chosen above. Adjust the oth
 ```powershell
 php artisan key:generate
 php artisan migrate
+php artisan db:seed --class=MoroccoGeographySeeder
 php artisan serve --host=127.0.0.1 --port=8000
 ```
 
@@ -52,6 +53,10 @@ php artisan accounts:create-administrator operator@example.test
 ```
 
 Enter the name and password at the prompts. The password is read without echo. Complete email verification before using administrator functions. Use an address you control in a deployed environment.
+
+### Shop evidence and geography
+
+See the [official geography sources and coverage](docs/geography-data.md). Shop evidence enters private quarantine. To make clean evidence available for review, install ClamAV, update its signatures, set `SHOP_CLAMSCAN_BINARY` to the absolute path of `clamscan`, and run `php artisan shops:scan-documents` from `backend/`. Repeat the command as needed because it processes up to 100 files per run.
 
 ## Start the frontend
 

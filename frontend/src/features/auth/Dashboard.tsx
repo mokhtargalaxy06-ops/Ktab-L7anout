@@ -8,6 +8,8 @@ import { Input } from '../../shared/ui/Input'
 import { Loading } from '../../shared/ui/Loading'
 import copy, { accountDashboard, type AccountRole } from './accountCopy'
 import { AdminAccounts } from './AdminAccounts'
+import { ShopDashboard } from '../shops/ShopDashboard'
+import { GeographyAdmin } from '../shops/GeographyAdmin'
 import { useSession, type User } from './session'
 
 function ProfileForm({ user }: { user: User }) {
@@ -87,12 +89,15 @@ function DashboardPage({ role, user }: { role: AccountRole; user: User }) {
     <div className="grid gap-5 md:grid-cols-[1fr_1.4fr]">
       <ProfileForm user={user} />
       <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2">
-        {labels.sections[role].map(section => <Card key={section} className="p-5">
+        {role !== 'shopkeeper' && labels.sections[role].map(section => <Card key={section} className="p-5">
           <h2 className="mb-2 text-lg font-bold">{section}</h2><p className="text-muted">{labels.pending}</p>
         </Card>)}
       </div>
     </div>
     {role === 'administrator' && user.abilities.includes('users.review') && <AdminAccounts />}
+    {role === 'shopkeeper' && user.abilities.includes('shops.manageAssigned') && <ShopDashboard />}
+    {role === 'administrator' && user.abilities.includes('shops.review') && <ShopDashboard admin />}
+    {role === 'administrator' && user.abilities.includes('geography.manage') && <GeographyAdmin />}
   </section>
 }
 

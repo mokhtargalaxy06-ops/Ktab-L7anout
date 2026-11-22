@@ -28,6 +28,8 @@ Use redacted localized case summaries, coarse geography, and opaque public IDs. 
 
 Authorize settlement evidence through the specific payout and bind the document to it at upload. A file alone cannot confirm a transfer. Require an independently verified transfer and available evidence bound to that payout before recording evidenced settlement.
 
+Shop evidence uses private storage, random file names, allowlisted detected media types, and a 5 MiB upload limit. The ClamAV scan command checks the digest and rejects files that trigger encryption or scan-limit alerts. Unreadable files and incomplete scans stay quarantined while the batch continues. Verified account owners of the shop and verified administrators can download clean files through shop-scoped authorization. Administrator review requires clean evidence from the profile revision being reviewed. Profile changes restart verification. [ClamAV scanning documentation](https://docs.clamav.net/manual/Usage/Scanning.html)
+
 ## Financial integrity and operations
 
 Authenticate simulator callbacks over the raw bytes with a timestamped signature and constant-time comparison. Enforce replay windows, deduplicate by event ID plus payload digest, and check business-level capture and operation identities separately. Quarantine conflicting event IDs. Keep callback secrets separate from user credentials and support rotation. API idempotency binds a key to the actor, operation, and canonical request hash. Replaying a key with a changed payload yields a conflict. Recheck current authorization before returning stored results.

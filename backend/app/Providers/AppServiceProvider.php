@@ -43,6 +43,7 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('recovery', fn (Request $request) => Limit::perMinute(8)->by($request->ip()));
         RateLimiter::for('account-status', fn (Request $request) => Limit::perMinute(10)->by($request->user()->id));
+        RateLimiter::for('shop-evidence', fn (Request $request) => Limit::perMinute(10)->by($request->user()->id));
         RateLimiter::for('login', function (Request $request) {
             $email = $request->input('email');
             $normalized = is_string($email) ? Str::lower(trim($email)) : '';

@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'shop_clamscan_binary' => env('SHOP_CLAMSCAN_BINARY'),
 
     /*
     |--------------------------------------------------------------------------
