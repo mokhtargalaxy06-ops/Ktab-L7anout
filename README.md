@@ -38,6 +38,8 @@ For questions about Ktab-L7anout or to discuss a collaboration, email Mokhtar So
 
 Consultez le [guide de contribution](CONTRIBUTING.md) pour proposer une modification ou ouvrir une pull request. Pour signaler un problème ou proposer une amélioration, choisissez un modèle dans les [issues GitHub](https://github.com/mokhtargalaxy06-ops/Ktab-L7anout/issues/new/choose). Les contributions sont les bienvenues en français, en arabe et en anglais.
 
+L’appel aux virements et les coordonnées bancaires ont été retirés de ce README par précaution, au regard de la loi marocaine n° 18.18 qui encadre les appels publics aux dons. Le projet accueille les contributions au code, à la documentation, aux traductions et aux tests. [Cadre juridique marocain des collectes de dons](https://societe-civile.ma/Organisation_collect_fond_public_Ar.html)
+
 <div dir="rtl">
 
 ## ما هو مشروع Ktab-L7anout؟
