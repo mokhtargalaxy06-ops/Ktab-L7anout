@@ -1,6 +1,21 @@
 # [Ktab-L7anout](https://github.com/mokhtargalaxy06-ops/Ktab-L7anout)
 
-[العربية](#ما-هو-مشروع-ktab-l7anout) · [Français](#guide-en-français) · [English](#english-guide) · [لقطات الواجهة](#لقطات-الواجهة-العربية) · [Contact](#contact) · [Soutenir le projet](#soutenir-le-projet) · [Installation](#local-setup)
+[العربية](#ما-هو-مشروع-ktab-l7anout) · [Français](#guide-en-français) · [English](#english-guide) · [لقطات الواجهة](#لقطات-الواجهة-العربية) · [Correctifs récents](#correctifs-récents) · [Contact](#contact) · [Soutenir le projet](#soutenir-le-projet) · [Installation](#local-setup)
+
+## Correctifs récents
+
+- **Chiffres d’impact.** L’accueil distingue les dons simulés reçus et affectés des paiements hors plateforme confirmés par les épiciers. Une famille est comptée dès qu’une partie de sa dette a effectivement été réglée et confirmée, et elle n’est comptée qu’une fois. Le compteur des dossiers entièrement réglés évolue lorsque la dette est intégralement payée. [Correctif des chiffres d’impact](https://github.com/mokhtargalaxy06-ops/Ktab-L7anout/commit/451901e02e33c87ebaee8a66d793b269c0c7f6d7)
+- **Progression du dossier.** Une dette de 300 MAD dont l’épicier a confirmé avoir reçu 250 MAD hors plateforme affiche 250 MAD reçus, 50 MAD restants et 83 % de progression.
+- **Suivi de la contribution.** La promesse WhatsApp laisse le solde inchangé. L’épicier confirme le montant reçu avec un justificatif, ce qui réduit le solde. Le donateur retrouve la confirmation et le montant dans le détail de sa contribution.
+- **Approbation et affichage des montants.** Le formulaire de confirmation affiche les montants en dirhams, tandis que l’API conserve les centimes. Si une dette portant la même référence a déjà été approuvée ou publiée pour la même épicerie, l’interface explique le blocage en français et en arabe.
+
+**English.** The homepage now separates simulated donations from shop-confirmed external payments. It counts each family once as soon as part of its debt has been paid and confirmed. Case pages show what the shop received and what remains. A WhatsApp pledge leaves the balance unchanged until the shop confirms receipt with evidence. Donors can track the confirmation in their contribution details. Debt confirmation displays amounts in dirhams, and duplicate approval errors identify the conflict.
+
+<div dir="rtl">
+
+**بالعربية.** تفصل الصفحة الرئيسية بين التبرعات المحاكية والمدفوعات خارج المنصة التي أكّد البقالون استلامها. تُحتسب كل أسرة مرة واحدة بمجرد تسديد جزء من دينها وتأكيده. يوضح الملف المبلغ المستلم والرصيد المتبقي. يظل الرصيد كما هو عند تسجيل وعد عبر واتساب، وينخفض عندما يؤكد البقال الاستلام ويرفق الإثبات. يظهر التأكيد والمبلغ في تفاصيل مساهمة المتبرع. ويعرض نموذج تأكيد الدين المبالغ بالدرهم، وتوضح رسالة الخطأ سبب تعذّر اعتماد ملف مكرر.
+
+</div>
 
 ## Contact
 
@@ -122,7 +137,7 @@ Ktab-L7anout منصة تضامن غذائي في المغرب تساعد الأ�
 
 #### الصفحة الرئيسية
 
-![الصفحة الرئيسية](docs/screenshots/ar/accueil.jpg)
+![الصفحة الرئيسية تعرض التبرعات المحاكية والمدفوعات المؤكدة خارج المنصة في عدّادين منفصلين](docs/screenshots/ar/accueil.jpg)
 
 #### تصفح الملفات المنشورة
 
@@ -130,7 +145,7 @@ Ktab-L7anout منصة تضامن غذائي في المغرب تساعد الأ�
 
 #### تفاصيل ملف منشور
 
-![تفاصيل ملف منشور](docs/screenshots/ar/dossier-publie.jpg)
+![تفاصيل ملف دين بقيمة 300 درهم، استلم البقال 250 درهماً وبقي 50 درهماً بنسبة تقدّم 83٪](docs/screenshots/ar/dossier-publie.jpg)
 
 #### الملفات العاجلة
 
