@@ -140,17 +140,13 @@ Ktab-L7anout منصة تضامن غذائي في المغرب تساعد الأ�
 
 ## لقطات الواجهة العربية
 
-يضمّ هذا المعرض 35 لقطة من صفحات التطبيق باللغة العربية وباتجاه من اليمين إلى اليسار، بما فيها نسخة الهاتف. الحسابات والطلبات والمبالغ الظاهرة بيانات تجريبية.
+يضمّ هذا المعرض 34 لقطة من صفحات التطبيق باللغة العربية على شاشة الحاسوب. يمكنك أيضاً تصفح [لقطات نسخة الهاتف](#لقطات-نسخة-الهاتف). الحسابات والطلبات والمبالغ الظاهرة بيانات تجريبية.
 
 ### الصفحات العامة
 
 #### الصفحة الرئيسية
 
 ![الصفحة الرئيسية تعرض التبرعات المحاكية والمدفوعات المؤكدة خارج المنصة في عدّادين منفصلين](docs/screenshots/ar/accueil.jpg)
-
-#### الصفحة الرئيسية على الهاتف
-
-<img src="docs/screenshots/ar/accueil-mobile.jpg" alt="الصفحة الرئيسية العربية على الهاتف مع زر قائمة التنقل" width="390">
 
 #### تصفح الملفات المنشورة
 
@@ -294,6 +290,59 @@ Ktab-L7anout منصة تضامن غذائي في المغرب تساعد الأ�
 
 ![سجل التدقيق](docs/screenshots/ar/admin-audit.jpg)
 
+
+## لقطات نسخة الهاتف
+
+34 لقطة للواجهة العربية على شاشة بعرض 390 بكسل. تستخدم المساحات الخاصة حسابات وبيانات تجريبية.
+
+### الصفحات العامة
+
+| | |
+| --- | --- |
+| **الصفحة الرئيسية**<br><img src="docs/screenshots/ar/accueil-mobile.jpg" alt="الصفحة الرئيسية على الهاتف" width="260"> | **الملفات المنشورة**<br><img src="docs/screenshots/ar/dossiers-publies-mobile.jpg" alt="الملفات المنشورة على الهاتف" width="260"> |
+| **تفاصيل ملف**<br><img src="docs/screenshots/ar/dossier-publie-mobile.jpg" alt="تفاصيل ملف على الهاتف" width="260"> | **الملفات العاجلة**<br><img src="docs/screenshots/ar/dossiers-urgents-mobile.jpg" alt="الملفات العاجلة على الهاتف" width="260"> |
+| **الشفافية المالية**<br><img src="docs/screenshots/ar/transparence-mobile.jpg" alt="الشفافية المالية على الهاتف" width="260"> |  |
+
+### الحساب
+
+| | |
+| --- | --- |
+| **تسجيل الدخول**<br><img src="docs/screenshots/ar/connexion-mobile.jpg" alt="تسجيل الدخول على الهاتف" width="260"> | **إنشاء حساب**<br><img src="docs/screenshots/ar/inscription-mobile.jpg" alt="إنشاء حساب على الهاتف" width="260"> |
+| **استعادة كلمة المرور**<br><img src="docs/screenshots/ar/mot-de-passe-oublie-mobile.jpg" alt="استعادة كلمة المرور على الهاتف" width="260"> | **إعادة تعيين كلمة المرور**<br><img src="docs/screenshots/ar/reinitialisation-mobile.jpg" alt="إعادة تعيين كلمة المرور على الهاتف" width="260"> |
+| **تأكيد البريد الإلكتروني**<br><img src="docs/screenshots/ar/verification-email-mobile.jpg" alt="تأكيد البريد الإلكتروني على الهاتف" width="260"> | **صفحة غير موجودة**<br><img src="docs/screenshots/ar/page-introuvable-mobile.jpg" alt="صفحة غير موجودة على الهاتف" width="260"> |
+
+### مساحة المتبرع والمساهمات
+
+| | |
+| --- | --- |
+| **مساحة المتبرع**<br><img src="docs/screenshots/ar/espace-donateur-mobile.jpg" alt="مساحة المتبرع على الهاتف" width="260"> | **المساهمة عبر واتساب**<br><img src="docs/screenshots/ar/contribution-mobile.jpg" alt="المساهمة عبر واتساب على الهاتف" width="260"> |
+| **صندوق الديون المستعجلة**<br><img src="docs/screenshots/ar/fonds-urgent-mobile.jpg" alt="صندوق الديون المستعجلة على الهاتف" width="260"> | **سجل التبرعات**<br><img src="docs/screenshots/ar/historique-dons-mobile.jpg" alt="سجل التبرعات على الهاتف" width="260"> |
+| **تفاصيل المساهمة وتأكيد الاستلام**<br><img src="docs/screenshots/ar/detail-contribution-mobile.jpg" alt="تفاصيل المساهمة وتأكيد الاستلام على الهاتف" width="260"> | **الدفع التجريبي**<br><img src="docs/screenshots/ar/paiement-simule-mobile.jpg" alt="الدفع التجريبي على الهاتف" width="260"> |
+| **نجاح الدفع التجريبي**<br><img src="docs/screenshots/ar/paiement-reussi-mobile.jpg" alt="نجاح الدفع التجريبي على الهاتف" width="260"> | **فشل الدفع التجريبي**<br><img src="docs/screenshots/ar/paiement-echoue-mobile.jpg" alt="فشل الدفع التجريبي على الهاتف" width="260"> |
+
+### مساحة المستفيد
+
+| | |
+| --- | --- |
+| **مساحة المستفيد**<br><img src="docs/screenshots/ar/espace-beneficiaire-mobile.jpg" alt="مساحة المستفيد على الهاتف" width="260"> | **طلب مساعدة جديد**<br><img src="docs/screenshots/ar/nouvelle-demande-mobile.jpg" alt="طلب مساعدة جديد على الهاتف" width="260"> |
+| **تتبع طلب المساعدة**<br><img src="docs/screenshots/ar/suivi-demande-mobile.jpg" alt="تتبع طلب المساعدة على الهاتف" width="260"> |  |
+
+### مساحة البقال
+
+| | |
+| --- | --- |
+| **مساحة البقال وتأكيد المدفوعات**<br><img src="docs/screenshots/ar/espace-epicier-mobile.jpg" alt="مساحة البقال وتأكيد المدفوعات على الهاتف" width="260"> | **التحقق من الدين**<br><img src="docs/screenshots/ar/verification-dette-mobile.jpg" alt="التحقق من الدين على الهاتف" width="260"> |
+| **تسجيل بقالة**<br><img src="docs/screenshots/ar/inscription-epicerie-mobile.jpg" alt="تسجيل بقالة على الهاتف" width="260"> |  |
+
+### مركز الإدارة
+
+| | |
+| --- | --- |
+| **نظرة عامة**<br><img src="docs/screenshots/ar/administration-mobile.jpg" alt="نظرة عامة على الهاتف" width="260"> | **إدارة الملفات**<br><img src="docs/screenshots/ar/admin-dossiers-mobile.jpg" alt="إدارة الملفات على الهاتف" width="260"> |
+| **مراجعة ملف**<br><img src="docs/screenshots/ar/admin-examen-mobile.jpg" alt="مراجعة ملف على الهاتف" width="260"> | **إدارة المستخدمين**<br><img src="docs/screenshots/ar/admin-utilisateurs-mobile.jpg" alt="إدارة المستخدمين على الهاتف" width="260"> |
+| **إدارة البقالات**<br><img src="docs/screenshots/ar/admin-epiceries-mobile.jpg" alt="إدارة البقالات على الهاتف" width="260"> | **مراجعة ملف بقالة**<br><img src="docs/screenshots/ar/admin-fiche-epicerie-mobile.jpg" alt="مراجعة ملف بقالة على الهاتف" width="260"> |
+| **الإدارة المالية**<br><img src="docs/screenshots/ar/admin-finances-mobile.jpg" alt="الإدارة المالية على الهاتف" width="260"> | **الجهات**<br><img src="docs/screenshots/ar/admin-territoires-mobile.jpg" alt="الجهات على الهاتف" width="260"> |
+| **سجل التدقيق**<br><img src="docs/screenshots/ar/admin-audit-mobile.jpg" alt="سجل التدقيق على الهاتف" width="260"> |  |
 
 ## Guide en français
 
