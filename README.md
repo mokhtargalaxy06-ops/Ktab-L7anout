@@ -1,5 +1,7 @@
 # [Ktab-L7anout](https://github.com/mokhtarsoumair399-collab/Ktab-L7anout)
 
+[العربية](#ما-هو-مشروع-ktab-l7anout) · [Français](#guide-en-français) · [English](#english-guide) · [لقطات الواجهة](#لقطات-الواجهة-العربية) · [Installation](#local-setup)
+
 <div dir="rtl">
 
 ## ما هو مشروع Ktab-L7anout؟
@@ -26,7 +28,7 @@ Ktab-L7anout منصة تضامن غذائي في المغرب تساعد الأ�
 3. ارجع إلى المنصة واضغط على زر تسجيل وعد المساهمة بعد الإرسال. يظهر المبلغ في سجل تبرعاتك بصفة «مساهمة موعودة». تعتمد المنصة على تصريحك بالإرسال، لأن رابط واتساب لا يرسل إليها تأكيداً بالتسليم.
 4. افتح تفاصيل المساهمة في سجل التبرعات وشارك **مرجع المساهمة** مع البقال ليطابق الدفعة مع الوعد الصحيح. يظل الرصيد على حاله حتى يتأكد استلام الدفعة.
 5. بعد استلام الدفعة خارج المنصة، يفتح البقال **مساحتي ← التسويات ← المدفوعات المستلمة خارج المنصة**، ويختار المساهمة، ويُدخل المبلغ المستلم ومرجع الدفع ويرفع إثباتاً بصيغة PDF أو صورة. عند الضغط على **«تأكيد استلام الدفع»** يُخصم المبلغ مباشرة دون انتظار موافقة إدارية. تُسجّل الدفعة في سجل مستقل عن الأموال التي تستلمها المنصة.
-6. راجع تفاصيل المساهمة للاطلاع على حالة الاستلام والمبلغ الذي أكّده البقال. مثلاً، يبقى رصيد دين قدره **35 درهماً** كما هو عند تسجيل وعد بمبلغ **12,50 درهماً**. بعد تأكيد استلام **12,50 درهماً** يصبح الرصيد **22,50 درهماً**.
+6. بعد تأكيد البقال، تعرض المنصة للمتبرع في **سجل التبرعات ← تفاصيل المساهمة** حالة **«تم تأكيد استلام الدفع»** والمبلغ الذي استلمه البقال فعلياً. إذا كانت الصفحة مفتوحة، حدّثها لعرض الحالة الجديدة. مثلاً، يبقى رصيد دين قدره **35 درهماً** كما هو عند تسجيل وعد بمبلغ **12,50 درهماً**. بعد تأكيد استلام **12,50 درهماً** يصبح الرصيد **22,50 درهماً**.
 
 ### صندوق الديون المستعجلة والدفع التجريبي
 
@@ -79,7 +81,206 @@ Ktab-L7anout منصة تضامن غذائي في المغرب تساعد الأ�
 
 </div>
 
-Ktab-L7anout is a Moroccan food-solidarity initiative. The French and Arabic platform supports verified grocery debt cases, simulated donations, shop settlement, and public financial transparency.
+## لقطات الواجهة العربية
+
+لقطات من صفحات التطبيق الفعلية باللغة العربية وباتجاه من اليمين إلى اليسار. الحسابات والطلبات والمبالغ الظاهرة بيانات تجريبية. افتح المجموعة التي تريد تصفّحها.
+
+<details>
+<summary>الصفحات العامة (5)</summary>
+
+#### الصفحة الرئيسية
+
+![الصفحة الرئيسية](docs/screenshots/ar/accueil.jpg)
+
+#### تصفح الملفات المنشورة
+
+![تصفح الملفات المنشورة](docs/screenshots/ar/dossiers-publies.jpg)
+
+#### تفاصيل ملف منشور
+
+![تفاصيل ملف منشور](docs/screenshots/ar/dossier-publie.jpg)
+
+#### الملفات العاجلة
+
+![الملفات العاجلة](docs/screenshots/ar/dossiers-urgents.jpg)
+
+#### الشفافية المالية
+
+![الشفافية المالية](docs/screenshots/ar/transparence.jpg)
+
+</details>
+
+<details>
+<summary>الحساب وتسجيل الدخول (6)</summary>
+
+#### تسجيل الدخول
+
+![تسجيل الدخول](docs/screenshots/ar/connexion.jpg)
+
+#### إنشاء حساب
+
+![إنشاء حساب](docs/screenshots/ar/inscription.jpg)
+
+#### طلب استعادة كلمة المرور
+
+![طلب استعادة كلمة المرور](docs/screenshots/ar/mot-de-passe-oublie.jpg)
+
+#### إعادة تعيين كلمة المرور
+
+![إعادة تعيين كلمة المرور](docs/screenshots/ar/reinitialisation.jpg)
+
+#### تأكيد البريد الإلكتروني
+
+![تأكيد البريد الإلكتروني](docs/screenshots/ar/verification-email.jpg)
+
+#### صفحة غير موجودة
+
+![صفحة غير موجودة](docs/screenshots/ar/page-introuvable.jpg)
+
+</details>
+
+<details>
+<summary>مساحة المتبرع والمساهمات (8)</summary>
+
+#### مساحة المتبرع
+
+![مساحة المتبرع](docs/screenshots/ar/espace-donateur.jpg)
+
+#### المساهمة في ملف عبر واتساب
+
+![المساهمة في ملف عبر واتساب](docs/screenshots/ar/contribution.jpg)
+
+#### صندوق الديون المستعجلة
+
+![صندوق الديون المستعجلة](docs/screenshots/ar/fonds-urgent.jpg)
+
+#### سجل التبرعات
+
+![سجل التبرعات](docs/screenshots/ar/historique-dons.jpg)
+
+#### تفاصيل المساهمة وتأكيد البقال استلام الدفع
+
+![تفاصيل المساهمة وتأكيد البقال استلام الدفع](docs/screenshots/ar/detail-contribution.jpg)
+
+#### الدفع التجريبي
+
+![الدفع التجريبي](docs/screenshots/ar/paiement-simule.jpg)
+
+#### تأكيد الدفع التجريبي
+
+![تأكيد الدفع التجريبي](docs/screenshots/ar/paiement-reussi.jpg)
+
+#### فشل الدفع التجريبي
+
+![فشل الدفع التجريبي](docs/screenshots/ar/paiement-echoue.jpg)
+
+</details>
+
+<details>
+<summary>مساحة المستفيد (3)</summary>
+
+#### مساحة المستفيد
+
+![مساحة المستفيد](docs/screenshots/ar/espace-beneficiaire.jpg)
+
+#### طلب مساعدة جديد
+
+![طلب مساعدة جديد](docs/screenshots/ar/nouvelle-demande.jpg)
+
+#### تتبع الطلب والوثائق
+
+![تتبع الطلب والوثائق](docs/screenshots/ar/suivi-demande.jpg)
+
+</details>
+
+<details>
+<summary>مساحة البقال (3)</summary>
+
+#### مساحة البقال وتأكيد الدفعات المستلمة
+
+![مساحة البقال وتأكيد الدفعات المستلمة](docs/screenshots/ar/espace-epicier.jpg)
+
+#### تسجيل بقالة
+
+![تسجيل بقالة](docs/screenshots/ar/inscription-epicerie.jpg)
+
+#### التحقق من الدين
+
+![التحقق من الدين](docs/screenshots/ar/verification-dette.jpg)
+
+</details>
+
+<details>
+<summary>مركز الإدارة (9)</summary>
+
+#### نظرة عامة
+
+![نظرة عامة](docs/screenshots/ar/administration.jpg)
+
+#### إدارة الملفات
+
+![إدارة الملفات](docs/screenshots/ar/admin-dossiers.jpg)
+
+#### مراجعة ملف
+
+![مراجعة ملف](docs/screenshots/ar/admin-examen.jpg)
+
+#### إدارة المستخدمين
+
+![إدارة المستخدمين](docs/screenshots/ar/admin-utilisateurs.jpg)
+
+#### إدارة البقالات
+
+![إدارة البقالات](docs/screenshots/ar/admin-epiceries.jpg)
+
+#### مراجعة ملف بقالة
+
+![مراجعة ملف بقالة](docs/screenshots/ar/admin-fiche-epicerie.jpg)
+
+#### الإدارة المالية
+
+![الإدارة المالية](docs/screenshots/ar/admin-finances.jpg)
+
+#### النشاط حسب الجهة
+
+![النشاط حسب الجهة](docs/screenshots/ar/admin-territoires.jpg)
+
+#### سجل التدقيق
+
+![سجل التدقيق](docs/screenshots/ar/admin-audit.jpg)
+
+</details>
+
+
+## Guide en français
+
+**Ktab-L7anout** aide les familles au Maroc à régler leurs dettes alimentaires auprès des épiceries de quartier. La plateforme propose une interface en français et en arabe. Les visiteurs peuvent consulter les dossiers publiés, rechercher par ville ou région, filtrer par montant, urgence ou état du financement et consulter les indicateurs publics. Les fiches publiques sont anonymisées. Les justificatifs restent privés, avec des copies anonymisées téléchargeables lorsqu’elles sont partagées par l’administration.
+
+### De la demande au dossier publié
+
+1. **Épicier.** Inscrivez votre épicerie, renseignez ses coordonnées et joignez un justificatif. L’administration vérifie l’épicerie avant qu’elle puisse traiter une demande de dette.
+2. **Bénéficiaire.** Dans **Mon espace**, créez une demande, choisissez la ville et l’épicerie, indiquez la référence et le montant de la dette en dirhams, puis enregistrez le brouillon. Téléversez un PDF ou une image, acceptez les conditions de confidentialité et cliquez sur **Soumettre**. L’envoi peut se faire pendant l’analyse du fichier.
+3. **Administration.** Dans **Dossiers**, ouvrez la demande et choisissez **Envoyer à l’épicerie**. L’épicier confirme la dette et son montant, ou signale un désaccord avec un motif.
+4. **Administration.** Après la confirmation de la dette, choisissez **Approuver**, puis **Publier**. Si un dossier est signalé, traitez le motif avant de lever le signalement. Vérifiez les doublons si la même référence de dette est déjà approuvée pour cette épicerie.
+
+### De la promesse WhatsApp au paiement confirmé
+
+1. **Donateur.** Ouvrez un dossier publié, accédez à **Contribution**, saisissez un montant dans la limite du solde et envoyez le message prérempli dans WhatsApp.
+2. Revenez sur la plateforme et cliquez sur **J’ai envoyé le message · Enregistrer ma promesse**. Dans **Historique des dons**, ouvrez le détail de la contribution et communiquez sa référence à l’épicier. Le solde reste inchangé à ce stade.
+3. **Épicier.** Une fois le paiement reçu hors plateforme, allez dans **Mon espace → Règlements → Paiements reçus hors plateforme**. Retrouvez la promesse, indiquez le montant reçu et la référence du paiement, joignez le justificatif et cliquez sur **Confirmer le paiement reçu**. Pour une nouvelle déclaration, le solde baisse immédiatement après confirmation, sans validation administrative.
+4. **Donateur.** Dès que l’épicier confirme la réception, la plateforme affiche **« Réception du paiement confirmée »** et le montant effectivement reçu dans **Historique des dons → Détail de la contribution**. Si la page est déjà ouverte, actualisez-la. Si tout le montant dû a été payé, le dossier passe à **Réglé**. Un dossier **Financé** peut encore être en attente de règlement à l’épicerie. Les deux états sont accessibles via le filtre **État du financement** dans **Dossiers publiés**.
+
+Le bouton de contribution sur la fiche publique est actuellement conditionné à l’activation du simulateur. Si ce bouton est masqué, un donateur connecté peut ouvrir le formulaire correspondant via `/donations/new?case=<référence-publique>`. Cette fonctionnalité enregistre les promesses et les paiements confirmés par les épiciers. Elle ne traite aucun paiement en ligne.
+
+### Fonds des dettes urgentes
+
+Le fonds urgent utilise un paiement simulé dans les environnements où ce mode est activé. Après confirmation simulée, le moteur répartit le montant entre les dossiers éligibles selon leur priorité et leur solde. La priorité combine la vulnérabilité du foyer (35 %), l’ancienneté de la dette (25 %), le risque de perdre l’accès aux produits de base (25 %) et le montant restant (15 %). Le solde non affecté après 30 jours est mis en attente de remboursement. Les tableaux financiers distinguent les dons simulés des confirmations de paiements reçus hors plateforme.
+
+Pour lancer le projet, consultez les [instructions d’installation](#local-setup). Les commandes et noms de variables sont identiques dans les deux langues de l’application.
+
+## English guide
+
+Ktab-L7anout is a Moroccan food-solidarity platform available in French and Arabic. It helps families settle verified grocery debts through case-specific WhatsApp pledges and shop-confirmed payments. It also provides an urgent debt pool for simulated funding and public financial transparency.
 
 ## Contents
 
@@ -102,9 +303,12 @@ flowchart LR
     B --> C[Administrator routes to shop]
     C --> D[Shopkeeper confirms debt]
     D --> E[Administrator approves and publishes]
-    E --> F[Donor makes a simulated contribution]
-    F --> G[Confirmed receipt funds eligible debt]
-    G --> H[Authorized administrators and shop reconcile simulated settlement]
+    E --> F[Donor sends a WhatsApp message and records a pledge]
+    F --> G[Shopkeeper confirms receipt and attaches proof]
+    G --> H[Confirmed amount reduces the case balance]
+    E --> I[Donor contributes to the urgent pool in a test environment]
+    I --> J[Confirmed simulated payment funds eligible debts]
+    J --> K[Administrators and shop reconcile simulated settlement]
 ```
 
 ### Role guide
@@ -113,13 +317,13 @@ flowchart LR
 | --- | --- | --- |
 | Visitor | [Dossiers publiés](http://127.0.0.1:5173/cases) | Browse anonymized published cases, filter by region, city, verified debt, funding state, or urgency, and view financial transparency. |
 | Beneficiary | [Mon espace](http://127.0.0.1:5173/dashboard/beneficiary) | Prepare a draft, select a shop, attach documents, accept consent, submit, and track progress. |
-| Shopkeeper | [Mes épiceries](http://127.0.0.1:5173/dashboard/shopkeeper) | Register a shop, manage owned shops, upload evidence, confirm or dispute assigned debt requests, and report receipt of a simulated settlement. |
-| Donor | [Historique des dons](http://127.0.0.1:5173/donations) | Fund a published case or the urgent pool in simulation and view personal donation, allocation, and return history. |
-| Administrator | [Centre d’administration](http://127.0.0.1:5173/dashboard/administrator) | Review shops and cases, moderate publication, administer accounts, review regional activity, inspect the audit log, reconcile simulated settlements, and export financial reports. |
+| Shopkeeper | [Mes épiceries](http://127.0.0.1:5173/dashboard/shopkeeper) | Register a shop, upload evidence, confirm or dispute assigned debts, confirm payments received outside the platform, and respond to simulated settlements. |
+| Donor | [Historique des dons](http://127.0.0.1:5173/donations) | Send a WhatsApp pledge for a published case, track shop-confirmed receipt, or test urgent-pool contributions and view allocations and returns. |
+| Administrator | [Centre d’administration](http://127.0.0.1:5173/dashboard/administrator) | Verify shops, review and publish cases, manage accounts, inspect external payment evidence and audit logs, reconcile simulated settlements, and export reports. |
 
 Public registration requires a phone number. Existing users can add it in **Mon profil**. The account owner and authorized administrators can see it. A user can opt in to WhatsApp contact, which shows a contact link in the administrator’s **Utilisateurs** list. Opening the link starts a chat in WhatsApp. The application does not send a message automatically.
 
-### Publish a case and make a test donation
+### Publish a case and record a WhatsApp contribution
 
 1. **Épicier** — Register the shop and upload an original document. An administrator opens [Épiceries](http://127.0.0.1:5173/dashboard/administrator/shops), selects the shop, and chooses **Vérifier → Enregistrer** when the shop meets the evidence requirements.
 2. **Bénéficiaire** — Click **Nouvelle demande**, select the city and shop, enter the debt details, and click **Enregistrer le brouillon**. The amount in the beneficiary form is entered in dirhams. Enter `10` for 10 MAD or `12,50` for 12.50 MAD. The API stores these as `1000` and `1250` minor units.
@@ -127,7 +331,11 @@ Public registration requires a phone number. Existing users can add it in **Mon 
 4. **Administrateur** — Open the request in [Dossiers](http://127.0.0.1:5173/dashboard/administrator/cases) and choose **Envoyer à l’épicerie**.
 5. **Épicier** — Open the assigned request and choose **Confirmer la dette** if the amount is correct. Dispute it with a reason if it is incorrect.
 6. **Administrateur** — Reopen the confirmed case, choose **Approuver**, then **Publier**. **Signaler** flags a case for review and blocks approval and publication. Use **Lever le signalement** only after resolving the issue.
-7. **Donateur** — Open the published case and choose **Contribuer en simulation**. If it does not appear, reset the filters. A maximum of 30 MAD excludes cases with verified debts above that amount.
+7. **Donateur** — Open the published case and choose **Contribution**. Enter an amount in MAD up to the remaining balance, open WhatsApp, and send the prefilled message to the shop. Return to the application and choose **J’ai envoyé le message · Enregistrer ma promesse**. Share the contribution reference from the donation detail so the shop can match the payment to the pledge. The pledge leaves the balance unchanged.
+8. **Épicier** — Once payment has been received outside the platform, go to **Mon espace → Règlements → Paiements reçus hors plateforme**. Select the pledge, enter the amount actually received and the payment reference, attach a PDF or image, then click **Confirmer le paiement reçu**. A successful confirmation reduces the balance immediately, with no administrative approval step. A fully paid case becomes **Réglé**.
+9. **Donor** — After the shopkeeper confirms receipt, the platform shows **« Réception du paiement confirmée »** (payment receipt confirmed) and the amount actually received in the contribution details under **Historique des dons**. Refresh the page if it is already open. Use **Dossiers publiés → État du financement** to find funded or settled cases. If a case is missing, check its publication status and clear any filters that exclude it.
+
+The public case page currently shows the **Contribution** button only when the simulator is enabled. If the button is hidden, a signed-in donor can open the case-specific form at `/donations/new?case=<public-reference>`. The WhatsApp workflow records pledges and shop-confirmed external receipts. It does not process online payments.
 
 **Territoires** counts applications that are no longer drafts. It compares regions and shows verified shop coverage by city. The beneficiary can track a saved draft before it appears in the regional totals.
 
@@ -244,7 +452,7 @@ The shop original is visible only to its authorized owners and administrators wh
 
 ## Funding and financial reporting
 
-A donation intent does not count as money received. A successful simulator confirmation records a receipt and ledger event. Specific-case donations stay restricted to that case. Excess funds are queued for simulated return. An urgent-pool receipt can be allocated across several ranked cases. The default holding period for unallocated pool funds is 30 days from confirmation.
+A WhatsApp pledge does not change the debt balance. A shop-confirmed external payment reduces the case balance and is tracked separately from platform receipts, payouts, and financial totals. A successful simulator confirmation records a receipt and ledger event. Specific-case allocations stay restricted to the designated case, with excess queued for simulated return. An urgent-pool receipt can be allocated across several ranked cases. Unallocated pool funds are held for up to 30 days from confirmation.
 
 Urgency combines household vulnerability (35%), debt age (25%), risk of losing access to basic groceries (25%), and remaining capacity (15%). The default urgent threshold is 60/100 for an eligible open case with current assessments. See [business rules](docs/business-rules.md) for the scoring rubric and tie-breaking policy.
 
