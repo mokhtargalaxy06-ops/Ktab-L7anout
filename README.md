@@ -2,12 +2,6 @@
 
 [العربية](#ما-هو-مشروع-ktab-l7anout) · [Français](#guide-en-français) · [English](#english-guide) · [لقطات الواجهة](#لقطات-الواجهة-العربية) · [Soutenir le projet](#soutenir-le-projet) · [Installation](#local-setup)
 
-## معاينة الواجهة العربية
-
-![الصفحة الرئيسية لمشروع Ktab-L7anout باللغة العربية](docs/screenshots/ar/accueil.jpg)
-
-[شاهد جميع لقطات الواجهة العربية](#لقطات-الواجهة-العربية) · [Toutes les captures](docs/screenshots/ar) · [All screenshots](docs/screenshots/ar)
-
 ## Soutenir le projet
 
 Vous souhaitez aider **Ktab-L7anout** à ouvrir au public ? Vous pouvez soutenir le projet par virement bancaire. Votre contribution aide à couvrir le développement, les tests et l’hébergement. Le virement est versé sur le compte personnel du porteur du projet pour soutenir son lancement. Les contributions destinées à régler une dette suivent le parcours du dossier sur la plateforme.
@@ -110,10 +104,9 @@ Ktab-L7anout منصة تضامن غذائي في المغرب تساعد الأ�
 
 ## لقطات الواجهة العربية
 
-لقطات من صفحات التطبيق الفعلية باللغة العربية وباتجاه من اليمين إلى اليسار. الحسابات والطلبات والمبالغ الظاهرة بيانات تجريبية. افتح المجموعة التي تريد تصفّحها.
+يضمّ هذا المعرض 34 لقطة من صفحات التطبيق باللغة العربية وباتجاه من اليمين إلى اليسار. الحسابات والطلبات والمبالغ الظاهرة بيانات تجريبية.
 
-<details>
-<summary>الصفحات العامة (5)</summary>
+### الصفحات العامة
 
 #### الصفحة الرئيسية
 
@@ -135,10 +128,7 @@ Ktab-L7anout منصة تضامن غذائي في المغرب تساعد الأ�
 
 ![الشفافية المالية](docs/screenshots/ar/transparence.jpg)
 
-</details>
-
-<details>
-<summary>الحساب وتسجيل الدخول (6)</summary>
+### الحساب وتسجيل الدخول
 
 #### تسجيل الدخول
 
@@ -164,10 +154,7 @@ Ktab-L7anout منصة تضامن غذائي في المغرب تساعد الأ�
 
 ![صفحة غير موجودة](docs/screenshots/ar/page-introuvable.jpg)
 
-</details>
-
-<details>
-<summary>مساحة المتبرع والمساهمات (8)</summary>
+### مساحة المتبرع والمساهمات
 
 #### مساحة المتبرع
 
@@ -201,10 +188,7 @@ Ktab-L7anout منصة تضامن غذائي في المغرب تساعد الأ�
 
 ![فشل الدفع التجريبي](docs/screenshots/ar/paiement-echoue.jpg)
 
-</details>
-
-<details>
-<summary>مساحة المستفيد (3)</summary>
+### مساحة المستفيد
 
 #### مساحة المستفيد
 
@@ -218,10 +202,7 @@ Ktab-L7anout منصة تضامن غذائي في المغرب تساعد الأ�
 
 ![تتبع الطلب والوثائق](docs/screenshots/ar/suivi-demande.jpg)
 
-</details>
-
-<details>
-<summary>مساحة البقال (3)</summary>
+### مساحة البقال
 
 #### مساحة البقال وتأكيد الدفعات المستلمة
 
@@ -235,10 +216,7 @@ Ktab-L7anout منصة تضامن غذائي في المغرب تساعد الأ�
 
 ![التحقق من الدين](docs/screenshots/ar/verification-dette.jpg)
 
-</details>
-
-<details>
-<summary>مركز الإدارة (9)</summary>
+### مركز الإدارة
 
 #### نظرة عامة
 
@@ -275,8 +253,6 @@ Ktab-L7anout منصة تضامن غذائي في المغرب تساعد الأ�
 #### سجل التدقيق
 
 ![سجل التدقيق](docs/screenshots/ar/admin-audit.jpg)
-
-</details>
 
 
 ## Guide en français
