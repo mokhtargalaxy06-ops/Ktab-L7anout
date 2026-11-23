@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\DebtCaseConflict;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -42,6 +43,10 @@ return Application::configure(basePath: dirname(__DIR__))
                 default => $status >= 500 ? 'server_error' : 'request_failed',
             };
             $body = ['code' => $code, 'message' => __("api.$code"), 'request_id' => (string) Str::uuid()];
+
+            if ($exception instanceof DebtCaseConflict) {
+                $body['message'] = $exception->getMessage();
+            }
 
             if ($exception instanceof ValidationException) {
                 $body['errors'] = $exception->errors();

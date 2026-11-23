@@ -8,7 +8,7 @@ class SimulatedProvider
 {
     public static function enabled(): bool
     {
-        return app()->environment(['local', 'testing']) && config('funding.simulator_enabled') === true;
+        return app()->environment(['local', 'testing', 'staging']) && config('funding.simulator_enabled') === true;
     }
 
     public function event(object $payment, string $outcome): array

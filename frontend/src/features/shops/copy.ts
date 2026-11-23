@@ -1,5 +1,10 @@
 const copy = {
   fr: {
+    donorEvidence: 'Justificatifs de l’épicerie', redacted: 'Copie anonymisée', uploadRedacted: 'Ajouter une copie anonymisée',
+    noSharedEvidence: 'Aucune copie anonymisée n’a encore été publiée par l’administration pour ce dossier.',
+    localManualReview: 'Non analysé · contrôle manuel local',
+    redactHint: 'Retirez les noms, coordonnées, signatures et métadonnées personnelles avant de partager.',
+    share: 'Partager avec les donateurs', unshare: 'Retirer le partage', shared: 'Partagé avec les donateurs',
     refresh: 'Actualiser',
     shops: 'Mes épiceries', shopReview: 'Vérification des épiceries', geography: 'Référentiel géographique',
     register: 'Inscrire une épicerie', selectShop: 'Sélectionner une épicerie', shopName: 'Nom de l’épicerie',
@@ -17,6 +22,11 @@ const copy = {
     selectRecord: 'Fiche à modifier', edit: 'Modifier', invalid: 'Vérifiez les informations et les justificatifs.',
   },
   ar: {
+    donorEvidence: 'مستندات البقالة', redacted: 'نسخة منزوعة البيانات الشخصية', uploadRedacted: 'إضافة نسخة منزوعة البيانات',
+    noSharedEvidence: 'لم تنشر الإدارة بعد أي نسخة منزوعة البيانات الشخصية لهذا الملف.',
+    localManualReview: 'لم يُفحص · مراجعة يدوية محلية',
+    redactHint: 'احذف الأسماء وبيانات الاتصال والتوقيعات والبيانات الشخصية المخفية قبل المشاركة.',
+    share: 'مشاركة مع المتبرعين', unshare: 'إيقاف المشاركة', shared: 'تمت المشاركة مع المتبرعين',
     refresh: 'تحديث',
     shops: 'متاجري', shopReview: 'التحقق من المتاجر', geography: 'السجل الجغرافي',
     register: 'تسجيل متجر', selectShop: 'اختر متجراً', shopName: 'اسم المتجر',

@@ -2,6 +2,12 @@
 
 Use JSON under `/api/v1` and HTTPS. Keep Sanctum's CSRF bootstrap at `GET /sanctum/csrf-cookie`, then use `POST /login` and `POST /logout` for first-party session authentication. Registration, email verification, and password reset use Laravel authentication flows. Axios sends same-origin cookies and the XSRF header. Send `Accept: application/json` and use `Accept-Language` with French as fallback for unsupported locales. Use Sanctum and Policies for protected routes. [Laravel Sanctum documentation](https://laravel.com/framework/docs/sanctum)
 
+## External receipts for WhatsApp pledges
+
+Authenticated shopkeepers use `GET /api/v1/shop/external-payments` to find pledges for their shops. They submit one receipt per pledge with `POST /api/v1/shop/external-payments/{pledge}` as multipart form data containing `amount_minor` (a positive MAD amount in centimes), `reference` and `evidence` (PDF, JPEG or PNG, up to 5 MiB).
+
+Successful shop confirmation credits the debt in the same transaction. A duplicate reference or unsafe reduction of debt capacity returns HTTP 409. Authorized finance administrators can list confirmations with `GET /api/v1/admin/external-payments` and download the attachment from `GET /api/v1/admin/external-payments/{pledge}/evidence`. Previously pending declarations can still be decided using `PATCH /api/v1/admin/external-payments/{pledge}` with `decision`, `reason` and the administrator's current `password`. The donor detail exposes the receipt status and amount.
+
 ## Conventions
 
 - Resources return `data`. Paginated collections add `links` and `meta`. Use opaque cursors, stable sort order, and bounded page sizes.
@@ -154,3 +160,13 @@ The following verified-administrator endpoints are under `/api/v1/admin`. The ov
 | GET /audit | Paged audit events, optionally filtered by `actor_id` and `target_id`. Only approved metadata fields are returned. |
 
 The user list accepts `q`, `role` and `status`. Case lists accept `region_id`, `city_id` and `status`, and shop lists accept `city_id` and `status`. Account status changes, geography changes, and manual simulated returns require a reason. Returns also require current-password verification and an idempotency key. The existing case review endpoint accepts `unpublish`, `suspend` and `reopen_dispute`, each with the current revision and a reason.
+
+## Account contact details
+
+Public registration accepts a required phone and optional whatsapp_contact consent. Profile updates accept both fields, and clearing the phone disables WhatsApp contact. Existing accounts can add a number in their profile. The API normalizes Moroccan local numbers and international numbers into a plus-prefixed format. Only the account owner and authorized administrators can see this contact data. The administrator interface shows a chat link only for opted-in accounts.
+
+The shopkeeper dashboard opens the shops returned by GET /api/v1/shop/shops directly. This paginated endpoint returns the signed-in owner’s shops, most recently created first, with location and evidence metadata.
+
+## Donor access to shop evidence
+
+Administrators download originals through the existing authenticated shop endpoint. An administrator can POST a separate file to /api/v1/admin/shops/{shop}/documents/{document}/redacted and PATCH /api/v1/admin/shops/{shop}/documents/{document}/sharing with a boolean share. Only scanned redacted copies for the current approved shop revision can be shared. Signed-in donors can list and download copies from /api/v1/donor/cases/{reference}/shop-evidence and its document subroute for a published eligible case.

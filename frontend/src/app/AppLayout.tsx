@@ -16,7 +16,7 @@ function Brand() {
     <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-forest text-white">
       <HeartHandshake aria-hidden="true" size={22} strokeWidth={1.8} />
     </span>
-    <span>Morocco <span className="text-forest">Debt Relief</span></span>
+    <span>Ktab-<span className="text-forest">L7anout</span></span>
   </Link>
 }
 

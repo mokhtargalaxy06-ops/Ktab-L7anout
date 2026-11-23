@@ -22,6 +22,7 @@ class DonationRequest extends FormRequest
                 'case_reference' => ['required_if:scope,specific', 'prohibited_if:scope,urgent_pool', 'nullable', 'uuid'],
                 'amount_minor' => $amount, 'policy_version' => ['required', 'string', 'max:30'],
                 'currency' => ['required', 'in:MAD'], 'operation_key' => $key,
+                'whatsapp_pledge' => ['sometimes', 'boolean'],
             ],
             'simulate' => ['outcome' => ['required', 'in:success,pending,failed,cancelled']],
             'simulateReturn' => [

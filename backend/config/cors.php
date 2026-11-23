@@ -6,7 +6,7 @@ return [
     'allowed_origins' => array_filter(array_map('trim', explode(',', env('FRONTEND_ORIGINS', '')))),
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['Accept', 'Accept-Language', 'Content-Type', 'X-XSRF-TOKEN', 'X-Requested-With', 'Idempotency-Key'],
-    'exposed_headers' => ['Retry-After'],
+    'exposed_headers' => ['Retry-After', 'Content-Disposition'],
     'max_age' => 600,
     'supports_credentials' => true,
 ];

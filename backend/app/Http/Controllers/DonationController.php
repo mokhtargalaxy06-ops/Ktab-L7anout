@@ -37,8 +37,13 @@ class DonationController extends Controller
 
     public function create(DonationRequest $request, FundingService $funding): JsonResponse
     {
-        abort_unless(SimulatedProvider::enabled(), 404);
-        $donation = $funding->create($request->user(), $request->validated(), $request->validated('operation_key'));
+        $input = $request->validated();
+        if ($request->boolean('whatsapp_pledge')) {
+            abort_unless($input['scope'] === 'specific', 422);
+        } else {
+            abort_unless(SimulatedProvider::enabled(), 404);
+        }
+        $donation = $funding->create($request->user(), $input, $input['operation_key']);
 
         return DonationResource::make($donation)->response()->setStatusCode(201)->header('Cache-Control', 'no-store');
     }

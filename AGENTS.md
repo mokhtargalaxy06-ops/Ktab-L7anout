@@ -1,10 +1,10 @@
-# Morocco Debt Relief engineering instructions
+# Ktab-L7anout engineering instructions
 
 These instructions apply throughout the repository.
 
 ## 1. Project mission
 
-Morocco Debt Relief is a nationwide charitable platform that helps financially vulnerable Moroccan families settle verified unpaid grocery debts at local grocery shops (Moul Hanout).
+Ktab-L7anout is a nationwide charitable platform that helps financially vulnerable Moroccan families settle verified unpaid grocery debts at local grocery shops (Moul Hanout).
 
 Donors can:
 

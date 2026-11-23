@@ -15,7 +15,17 @@ class DonationPolicy
 
     public function view(User $user, Donation $donation): bool
     {
-        return $this->create($user) && $donation->donor_id === $user->id;
+        return $this->viewAny($user) && $donation->donor_id === $user->id;
+    }
+
+    public function viewAny(User $user): bool
+    {
+        return in_array('donations.viewOwn', Access::abilities($user), true);
+    }
+
+    public function simulate(User $user, Donation $donation): bool
+    {
+        return $this->create($user) && $this->view($user, $donation);
     }
 
     public function manageReturns(User $user): bool

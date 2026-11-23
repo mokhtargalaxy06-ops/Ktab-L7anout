@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Download } from 'lucide-react'
 import { useSearchParams } from 'react-router'
 import { useLocale } from '../../app/locale'
 import { api } from '../../shared/api/client'
@@ -60,13 +61,42 @@ function Evidence({ shop, owner, onChange }: { shop: Shop; owner: boolean; onCha
     }
   }
 
+  async function changeSharing(item: ShopDocument, payload: FormData | { share: boolean }) {
+    setError(false)
+    setBusy(true)
+    try {
+      const path = '/api/v1/admin/shops/' + shop.id + '/documents/' + item.id
+      const uploading = payload instanceof FormData
+      onChange(await write<Shop>(uploading ? 'post' : 'patch', path + (uploading ? '/redacted' : '/sharing'), payload))
+    } catch {
+      setError(true)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return <Card className="p-5">
     <h3 className="mb-3 text-lg font-bold">{text.documents}</h3>
     {shop.documents?.length ? <ul className="mb-4 grid gap-2">
       {shop.documents.map(item => <li key={item.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
         <bdi>{item.media_type} · v{item.revision}</bdi>
-        <span>{text[item.status]}</span>
-        {item.status === 'available' && <Button onClick={() => void download(item)}>{text.download}</Button>}
+        {item.redacted && <span>{text.redacted}{item.shared && ' · ' + text.shared}</span>}
+        <span>{item.local_manual_review ? text.localManualReview : text[item.status]}</span>
+        <Button disabled={item.status !== 'available' && !item.local_manual_review} onClick={() => void download(item)}>
+          <Download aria-hidden="true" size={18} />{text.download}
+        </Button>
+        {!owner && item.redacted && (item.shared || (item.status === 'available' && item.revision === shop.revision && shop.status === 'verified')) &&
+          <Button disabled={busy} onClick={() => {
+            if (item.shared || window.confirm(text.redactHint)) void changeSharing(item, { share: !item.shared })
+          }}>{item.shared ? text.unshare : text.share}</Button>}
+        {!owner && !item.redacted && item.status === 'available' && item.revision === shop.revision && <details className="w-full">
+          <summary className="cursor-pointer font-semibold text-forest">{text.uploadRedacted}</summary>
+          <form className="mt-2 grid gap-2" onSubmit={event => { event.preventDefault(); void changeSharing(item, new FormData(event.currentTarget)) }}>
+            <p>{text.redactHint}</p>
+            <Input name="document" label={text.file} required type="file" accept=".pdf,.jpg,.jpeg,.png" />
+            <div><Button disabled={busy} type="submit">{text.uploadRedacted}</Button></div>
+          </form>
+        </details>}
       </li>)}
     </ul> : <p className="mb-3 text-muted">{text.noRecords}</p>}
     {owner && ['pending', 'rejected'].includes(shop.status) && <form className="grid gap-3" onSubmit={event => {
@@ -183,57 +213,76 @@ function Review({ shop, onChange }: { shop: Shop; onChange: (shop: Shop) => void
   </Card>
 }
 
+function ShopWorkspace({ shop, admin, saved }: { shop: Shop; admin: boolean; saved: (record: Shop) => void }) {
+  const { locale } = useLocale()
+  const text = copy[locale]
+
+  return <article className="grid gap-4">
+    <Card className="p-5">
+      <h3 className="mb-2 text-lg font-bold">{shop.name}</h3>
+      <p className="font-semibold">{text[shop.status]}</p>
+      {shop.location && <p>{[shop.location.region, shop.location.city, shop.location.locality]
+        .map(place => place?.[locale === 'ar' ? 'name_ar' : 'name_fr']).filter(Boolean).join(' · ')}</p>}
+      <p><bdi>{shop.contact_phone}</bdi>{shop.contact_email && <> · <bdi>{shop.contact_email}</bdi></>}</p>
+      {shop.review_reason && <p>{shop.review_reason}</p>}
+    </Card>
+    {!admin && ['pending', 'rejected', 'verified'].includes(shop.status) && <ShopForm key={shop.revision} shop={shop} onSave={saved} />}
+    <Evidence key={'evidence-' + shop.revision} shop={shop} owner={!admin} onChange={saved} />
+    {admin && <Review key={shop.status} shop={shop} onChange={saved} />}
+    <DebtInbox shop={shop} admin={admin} />
+  </article>
+}
+
 export function ShopDashboard({ admin = false }: { admin?: boolean }) {
   const { locale, t } = useLocale()
   const text = copy[locale]
   const [selected, setSelected] = useState('')
+  const [registering, setRegistering] = useState(false)
   const [cursor, setCursor] = useState('')
   const [revision, setRevision] = useState(0)
   const [params] = useSearchParams()
   const city = admin ? params.get('city_id') : null
   const filters = new URLSearchParams({ ...(cursor && { cursor }), ...(city && { city_id: city }) })
   const result = useResource<Collection<Shop>>('/api/v1/' + (admin ? 'admin/shops' : 'shop/shops') + '?' + filters, revision)
-  const detail = useResource<{ data: Shop }>(selected ? '/api/v1/shops/' + selected : null, revision)
+  const detail = useResource<{ data: Shop }>(admin && selected ? '/api/v1/shops/' + selected : null, revision)
   const [updated, setUpdated] = useState<Shop | null>(null)
   const shop = detail?.data?.data ?? (updated?.id === selected ? updated : undefined)
 
   function saved(record: Shop) {
-    setUpdated(record)
-    setSelected(record.id)
+    if (admin) {
+      setUpdated(record)
+      setSelected(record.id)
+    }
     setRevision(value => value + 1)
   }
 
   return <section className="mt-6 grid gap-4">
     <h2 className="display text-3xl">{admin ? text.shopReview : text.shops}</h2>
     <Card className="grid gap-3 p-5">
-      <label className="grid gap-1 text-sm font-semibold">{text.selectShop}
+      {admin && <label className="grid gap-1 text-sm font-semibold">{text.selectShop}
         <select className={selectClass} value={selected} onChange={event => { setUpdated(null); setSelected(event.target.value) }}>
-          <option value="">{admin ? text.choose : text.register}</option>
+          <option value="">{text.choose}</option>
           {selected && updated?.id === selected && !result?.data?.data.some(item => item.id === selected)
             && <option value={selected}>{updated.name} · {text[updated.status]}</option>}
           {result?.data?.data.map(item => <option key={item.id} value={item.id}>{item.name} · {text[item.status]}</option>)}
         </select>
-      </label>
+      </label>}
       <PageControls meta={result?.data?.meta} onChange={value => { setCursor(value); setSelected(''); setUpdated(null) }} />
-      <div><Button onClick={() => { setUpdated(null); setRevision(value => value + 1) }}>{text.refresh}</Button></div>
+      <div className="flex flex-wrap gap-2">
+        <Button onClick={() => { setUpdated(null); setRevision(value => value + 1) }}>{text.refresh}</Button>
+        {!admin && Boolean(result?.data?.data.length) && !registering &&
+          <Button variant="secondary" onClick={() => setRegistering(true)}>{text.register}</Button>}
+      </div>
       {result?.failed || detail?.failed ? <p role="alert" className="text-red-800">{t.failed}</p>
         : (!result?.data || (selected && !shop)) && <p role="status">{t.loading}</p>}
       {admin && result?.data?.data.length === 0 && <p>{text.noRecords}</p>}
     </Card>
-    {!admin && !selected && <ShopForm onSave={saved} />}
-    {shop && <>
-      <Card className="p-5">
-        <h3 className="mb-2 text-lg font-bold">{text.shopProfile}</h3>
-        <p className="font-semibold">{shop.name} · {text[shop.status]}</p>
-        {shop.location && <p>{[shop.location.region, shop.location.city, shop.location.locality]
-          .map(place => place?.[locale === 'ar' ? 'name_ar' : 'name_fr']).filter(Boolean).join(' · ')}</p>}
-        <p><bdi>{shop.contact_phone}</bdi>{shop.contact_email && <> · <bdi>{shop.contact_email}</bdi></>}</p>
-        {shop.review_reason && <p>{shop.review_reason}</p>}
-      </Card>
-      {!admin && ['pending', 'rejected', 'verified'].includes(shop.status) && <ShopForm key={shop.id + shop.revision} shop={shop} onSave={saved} />}
-      <Evidence key={shop.id + shop.revision} shop={shop} owner={!admin} onChange={saved} />
-      {admin && <Review key={shop.id + shop.status} shop={shop} onChange={saved} />}
-      <DebtInbox key={shop.id} shop={shop} admin={admin} />
-    </>}
+    {!admin && (registering || result?.data?.data.length === 0) && <ShopForm onSave={record => {
+      setRegistering(false)
+      setCursor('')
+      saved(record)
+    }} />}
+    {admin && shop && <ShopWorkspace key={shop.id} shop={shop} admin saved={saved} />}
+    {!admin && result?.data?.data.map(record => <ShopWorkspace key={record.id} shop={record} admin={false} saved={saved} />)}
   </section>
 }

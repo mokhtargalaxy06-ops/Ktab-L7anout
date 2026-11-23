@@ -8,6 +8,7 @@ import { Loading } from '../../shared/ui/Loading'
 import { mad } from '../discovery/types'
 import { useResource } from '../shops/shopApi'
 import { settlementCopy } from './copy'
+import { ExternalDebtPayments } from './ExternalDebtPayments'
 
 type Action = keyof typeof settlementCopy.fr.actions
 type State = 'requested' | 'submitted' | 'unknown' | 'evidence_pending' | 'paid' | 'failed' | 'canceled'
@@ -95,6 +96,7 @@ export function SettlementDashboard({ admin = false }: { admin?: boolean }) {
   }
   return <section className="mt-10 space-y-4">
     <h2 className="display text-3xl">{copy.title}</h2>
+    <ExternalDebtPayments admin={admin} />
     {!error && <p className="text-muted">{copy.simulation}</p>}
     {admin && <select aria-label={copy.all} className="rounded-lg border border-line p-2" value={filter}
       onChange={event => { setFilter(event.target.value); setPage(1) }}>

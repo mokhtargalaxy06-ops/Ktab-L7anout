@@ -45,10 +45,10 @@ class DebtApplicationController extends Controller
     public function shops(Request $request): JsonResponse
     {
         $data = $request->validate(['city_id' => ['required', 'uuid']]);
-        $shops = Shop::where('city_id', $data['city_id'])->where('status', 'verified')
+        $shops = Shop::where('city_id', $data['city_id'])->whereIn('status', Shop::APPLICATION_DRAFT_STATUSES)
             ->whereHas('city', fn ($city) => $city->where('active', true)->whereHas('region', fn ($region) => $region->where('active', true)))
             ->whereDoesntHave('owners', fn ($owner) => $owner->whereKey($request->user()->id))
-            ->orderBy('name')->orderBy('id')->get(['id', 'name']);
+            ->orderBy('name')->orderBy('id')->get(['id', 'name', 'status']);
 
         return response()->json(['data' => $shops])->header('Cache-Control', 'no-store');
     }
@@ -110,8 +110,9 @@ class DebtApplicationController extends Controller
     public function download(Request $request, DebtCase $case, string $document, string $audience): StreamedResponse
     {
         $this->authorizeAudience($case, $audience);
-        $file = $case->documents()->where('status', 'available')
+        $file = $case->documents()
             ->when($audience !== 'admin', fn ($query) => $query->where('audience', $audience))->findOrFail($document);
+        abort_unless($file->status === 'available' || ($audience === 'admin' && $file->isAwaitingLocalReview()), 404);
         $disk = Storage::disk('local');
         abort_unless($disk->exists($file->storage_key), 404);
         $this->workflow->audit($request->user(), $case, 'case.evidence_download', ['document_id' => $file->id]);

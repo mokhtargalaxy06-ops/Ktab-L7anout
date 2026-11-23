@@ -5,7 +5,8 @@ import { api, getCsrfCookie } from '../../shared/api/client'
 export type Place = { id: string; code: string; name_fr: string; name_ar: string; active: boolean; source_url: string; source_date: string }
 export type Locations = { region_id: string; city_id: string; locality_id: string | null }
 export type ShopProfile = Locations & { name: string; contact_phone: string; contact_email: string | null }
-export type ShopDocument = { id: string; status: 'quarantined' | 'available' | 'rejected'; media_type: string; revision: number }
+export type ShopDocument = { id: string; status: 'quarantined' | 'available' | 'rejected'; media_type: string; revision: number;
+  redacted?: boolean; shared?: boolean; local_manual_review?: boolean }
 type PlaceName = Pick<Place, 'name_fr' | 'name_ar'>
 export type Shop = ShopProfile & {
   id: string; status: 'pending' | 'verified' | 'suspended' | 'closed' | 'rejected'; review_reason: string | null; revision: number

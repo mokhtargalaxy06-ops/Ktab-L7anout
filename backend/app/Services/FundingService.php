@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Support\PhoneNumber;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -20,7 +21,12 @@ class FundingService
         return FinancialLock::run(function () use ($donor, $data, $key) {
             $amount = (int) $data['amount_minor'];
             $reference = $data['case_reference'] ?? null;
-            $hash = hash('sha256', json_encode([$data['scope'], $reference, $amount, $data['policy_version']], JSON_THROW_ON_ERROR));
+            $pledge = (bool) ($data['whatsapp_pledge'] ?? false);
+            $intent = [$data['scope'], $reference, $amount, $data['policy_version']];
+            if ($pledge) {
+                $intent[] = 'whatsapp';
+            }
+            $hash = hash('sha256', json_encode($intent, JSON_THROW_ON_ERROR));
             $existing = DB::table('donations')->where('donor_id', $donor->id)->where('idempotency_key', $key)->first();
             if ($existing) {
                 abort_unless(hash_equals($existing->request_hash, $hash), 409);
@@ -33,12 +39,19 @@ class FundingService
             if ($data['scope'] === 'specific') {
                 $case = $this->discovery->catalog()->where('id', $reference)->first();
                 abort_unless($case && $case->remaining_minor >= $amount, 409);
+                if ($pledge) {
+                    $phone = DB::table('debt_cases')->join('shops', 'shops.id', '=', 'debt_cases.shop_id')
+                        ->where('debt_cases.id', $case->internal_id)->where('shops.status', 'verified')
+                        ->value('shops.contact_phone');
+                    abort_unless(PhoneNumber::whatsappUrl($phone), 409);
+                }
             }
             $id = (string) Str::uuid7();
             DB::table('donations')->insert([
                 'id' => $id, 'donor_id' => $donor->id, 'debt_case_id' => $case?->internal_id,
                 'scope' => $data['scope'], 'amount_minor' => $amount, 'policy_version' => $data['policy_version'],
-                'idempotency_key' => $key, 'request_hash' => $hash, 'created_at' => now(), 'updated_at' => now(),
+                'idempotency_key' => $key, 'request_hash' => $hash, 'whatsapp_pledge' => $pledge,
+                'created_at' => now(), 'updated_at' => now(),
             ]);
             $payment = (string) Str::uuid7();
             DB::table('payment_transactions')->insert([
@@ -75,6 +88,8 @@ class FundingService
 
     private function record(array $event, object $payment, bool $frozen): void
     {
+        abort_if(DB::table('external_debt_payments')->where('donation_id', $payment->donation_id)
+            ->whereIn('status', ['pending', 'approved'])->exists(), 409);
         $hash = hash('sha256', json_encode([
             $event['reference'], $event['currency'], $event['amount_minor'], $event['outcome'],
         ], JSON_THROW_ON_ERROR));

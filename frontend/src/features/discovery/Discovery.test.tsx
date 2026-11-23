@@ -6,6 +6,7 @@ import { LocaleProvider } from '../../app/LocaleProvider'
 import { useLocale } from '../../app/locale'
 import { api } from '../../shared/api/client'
 import { PublicCases } from '../cases/PublicCases'
+import { SessionContext } from '../auth/session'
 import { CaseDetail } from './CaseDetail'
 import type { PublicCase } from './types'
 
@@ -17,6 +18,27 @@ const record: PublicCase = {
   collected_minor: '5000', remaining_minor: '20000', status: 'open', progress: 20, verified: true, urgent: true,
   currency: 'MAD', updates: [{ type: 'publish', date: '2024-02-01' }],
 }
+
+it.each([false, true])('shows the donor download button when evidence availability is %s', async available => {
+  vi.mocked(api.get).mockImplementation(async path => ({
+    data: { data: path.endsWith('/shop-evidence') ? (available ? [{ id: 'copy-1', media_type: 'application/pdf' }] : []) : record },
+  }))
+  render(<MemoryRouter initialEntries={['/cases/case-1']}><LocaleProvider>
+    <SessionContext.Provider value={{
+      user: { id: 'donor', name: 'Test', email: 'test@example.test', locale: 'fr', roles: ['donor'], abilities: ['donations.viewOwn'] },
+      ready: true, setUser: () => {}, refresh: async () => {},
+    }}>
+      <Routes><Route path="/cases/:reference" element={<CaseDetail />} /></Routes>
+    </SessionContext.Provider>
+  </LocaleProvider></MemoryRouter>)
+  if (available) {
+    expect(await screen.findByText('Copie anonymisée 1')).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Télécharger' })).toBeEnabled()
+  } else {
+    expect(await screen.findByText('Aucune copie anonymisée n’a encore été publiée par l’administration pour ce dossier.')).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Télécharger' })).toBeDisabled()
+  }
+})
 
 it('applies filters without losing them on the next page', async () => {
   vi.mocked(api.get).mockImplementation(async path => {

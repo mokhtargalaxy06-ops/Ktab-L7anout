@@ -126,6 +126,28 @@ class DebtApplicationTest extends TestCase
         $this->postJson("/api/v1/beneficiary/cases/$second/submit", ['consent' => true, 'consent_version' => '1', 'revision' => 1])->assertConflict();
     }
 
+    public function test_approval_explains_why_a_duplicate_debt_cannot_be_approved(): void
+    {
+        $first = $this->draft();
+        $this->submitWithEvidence($first);
+        $second = $this->draft();
+        $this->submitWithEvidence($second);
+        $this->asUser($this->admin);
+        $this->review($first, 'route')->assertOk();
+        $this->review($second, 'route')->assertOk();
+        $this->asUser($this->owner);
+        $this->verify($first, 'confirm')->assertOk();
+        $this->verify($second, 'confirm')->assertOk();
+        $this->asUser($this->admin);
+        $this->review($first, 'approve')->assertOk();
+        $this->withHeader('Accept-Language', 'fr');
+        $this->review($second, 'approve')->assertConflict()
+            ->assertJsonPath('message', __('cases.duplicate_approved', [], 'fr'));
+        $this->withHeader('Accept-Language', 'ar');
+        $this->review($second, 'approve')->assertConflict()
+            ->assertJsonPath('message', __('cases.duplicate_approved', [], 'ar'));
+    }
+
     public function test_access_is_scoped_and_potential_duplicate_is_visible_only_to_admin(): void
     {
         $id = $this->draft();
@@ -153,6 +175,57 @@ class DebtApplicationTest extends TestCase
         Auth::forgetGuards();
         $this->flushSession();
         $this->getJson("/api/v1/beneficiary/cases/$id/documents/$doc")->assertUnauthorized();
+    }
+
+    public function test_submission_accepts_unscanned_evidence_in_local_staging_and_production(): void
+    {
+        foreach (['local', 'staging', 'production'] as $environment) {
+            $this->app->instance('env', 'testing');
+            $id = $this->draft($environment);
+            $base = "/api/v1/beneficiary/cases/$id";
+            $document = $this->upload($base);
+            config(['filesystems.case_local_manual_evidence_review' => false]);
+            $this->app->instance('env', $environment);
+            $this->getJson($base)->assertJsonPath('data.documents.0.local_manual_review', false);
+            $this->withSession(['_token' => 'case-submission-test-token'])
+                ->withHeader('X-CSRF-TOKEN', 'case-submission-test-token');
+            $this->submit($id);
+            $this->assertDatabaseHas('documents', ['id' => $document, 'status' => 'quarantined']);
+            $this->asUser($this->admin);
+            $this->get("/api/v1/admin/cases/$id/documents/$document")->assertNotFound();
+        }
+    }
+
+    public function test_pending_shop_is_listed_and_can_be_saved_in_a_draft_before_approval(): void
+    {
+        $this->shop->forceFill(['status' => 'pending'])->save();
+        $this->asUser($this->beneficiary);
+        $this->getJson('/api/v1/beneficiary/shops?city_id='.$this->shop->city_id)->assertExactJson(['data' => [[
+            'id' => $this->shop->id, 'name' => $this->shop->name, 'status' => 'pending',
+        ]]]);
+        $id = $this->draft();
+        $base = "/api/v1/beneficiary/cases/$id";
+        $this->getJson($base)->assertJsonPath('data.shop_status', 'pending');
+        $this->upload($base);
+        $this->artisan('shops:scan-documents', ['--cases' => true])->assertSuccessful();
+        $this->postJson("$base/submit", ['consent' => true, 'consent_version' => '1', 'revision' => 1])->assertConflict();
+        $this->shop->forceFill(['status' => 'verified'])->save();
+        $this->submit($id);
+    }
+
+    public function test_unverified_beneficiary_can_submit_and_download_own_scanned_evidence(): void
+    {
+        $this->beneficiary->forceFill(['email_verified_at' => null])->save();
+        $id = $this->draft();
+        $base = "/api/v1/beneficiary/cases/$id";
+        $this->getJson('/api/v1/beneficiary/cases')->assertOk()->assertJsonPath('data.0.id', $id);
+        $document = $this->upload($base);
+        $this->getJson("$base/documents/$document")->assertNotFound();
+        $this->artisan('shops:scan-documents', ['--cases' => true])->assertSuccessful();
+        $this->getJson("$base/documents/$document")->assertOk();
+        $this->submit($id);
+        $this->asUser($this->account('beneficiary'));
+        $this->getJson("$base/documents/$document")->assertForbidden();
     }
 
     private function draft(string $reference = 'a1'): string

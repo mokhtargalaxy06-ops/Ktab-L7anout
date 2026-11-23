@@ -43,7 +43,7 @@ class ShopWorkflow
         });
     }
 
-    public function upload(User $actor, Shop $shop, UploadedFile $file): void
+    public function upload(User $actor, Shop $shop, UploadedFile $file, ?string $redactedFrom = null): void
     {
         $digest = hash_file('sha256', $file->getPathname());
         abort_if($digest === false, 503);
@@ -54,18 +54,26 @@ class ShopWorkflow
         abort_if($key === false, 503);
 
         try {
-            DB::transaction(function () use ($actor, $shop, $key, $mediaType, $size, $digest) {
+            DB::transaction(function () use ($actor, $shop, $key, $mediaType, $size, $digest, $redactedFrom) {
                 $shop = $this->lockedShop($shop);
-                Gate::forUser($actor)->authorize('update', $shop);
-                abort_unless(in_array($shop->status, ['pending', 'rejected'], true), 409);
-                if ($shop->status === 'rejected') {
+                if ($redactedFrom !== null) {
+                    Gate::forUser($actor)->authorize('review', Shop::class);
+                    $shop->documents()->whereNull('redacted_from_id')->where('status', 'available')
+                        ->where('revision', $shop->revision)->findOrFail($redactedFrom);
+                    abort_if($shop->documents()->whereNull('redacted_from_id')->where('sha256', $digest)->exists(), 422);
+                } else {
+                    Gate::forUser($actor)->authorize('update', $shop);
+                    abort_unless(in_array($shop->status, ['pending', 'rejected'], true), 409);
+                }
+                if ($redactedFrom === null && $shop->status === 'rejected') {
                     $shop->forceFill(['status' => 'pending', 'revision' => $shop->revision + 1, 'review_reason' => null])->save();
                 }
-                if ($shop->documents()->where('revision', $shop->revision)->count() >= 10) {
+                if ($shop->documents()->where('revision', $shop->revision)
+                    ->whereNull('redacted_from_id', not: $redactedFrom !== null)->count() >= 10) {
                     throw ValidationException::withMessages(['document' => __('shops.document_limit')]);
                 }
                 /** @var ShopDocument $document */
-                $document = $shop->documents()->create([
+                $document = $shop->documents()->make([
                     'revision' => $shop->revision,
                     'uploader_id' => $actor->id,
                     'storage_key' => $key,
@@ -73,13 +81,31 @@ class ShopWorkflow
                     'size_bytes' => $size,
                     'sha256' => $digest,
                 ]);
-                $this->audit($actor, $shop, 'shop.evidence_uploaded', ['document_id' => $document->id]);
+                $document->forceFill(['redacted_from_id' => $redactedFrom])->save();
+                $this->audit($actor, $shop, $redactedFrom === null ? 'shop.evidence_uploaded' : 'shop.redacted_evidence_uploaded', ['document_id' => $document->id]);
             });
         } catch (Throwable $exception) {
             $disk->delete($key);
 
             throw $exception;
         }
+    }
+
+    public function shareEvidence(User $actor, Shop $shop, string $document, bool $share): void
+    {
+        FinancialLock::run(function () use ($actor, $shop, $document, $share) {
+            Gate::forUser($actor)->authorize('review', Shop::class);
+            $shop = $this->lockedShop($shop);
+            $copy = $shop->documents()->whereNotNull('redacted_from_id')->lockForUpdate()->findOrFail($document);
+            if ($share) {
+                abort_unless($shop->status === 'verified' && $copy->status === 'available' && $copy->revision === $shop->revision, 409);
+            }
+            if ($share === ($copy->shared_at !== null)) {
+                return;
+            }
+            $copy->forceFill(['shared_at' => $share ? now() : null])->save();
+            $this->audit($actor, $shop, $share ? 'shop.evidence_shared' : 'shop.evidence_unshared', ['document_id' => $copy->id]);
+        });
     }
 
     public function review(User $actor, Shop $shop, array $review): Shop
@@ -95,12 +121,20 @@ class ShopWorkflow
                 default => [],
             };
             abort_unless(in_array($decision, $allowed, true), 409);
-            if ($decision === 'verified' && ! $shop->documents()->where('revision', $shop->revision)->where('status', 'available')->exists()) {
-                throw ValidationException::withMessages(['decision' => __('shops.clean_evidence_required')]);
+            $manual = false;
+            if ($decision === 'verified') {
+                $evidence = $shop->documents()->whereNull('redacted_from_id')->where('revision', $shop->revision);
+                if (! (clone $evidence)->where('status', 'available')->exists()) {
+                    $manual = ShopDocument::allowsLocalUnscannedReview() && $evidence->where('status', 'quarantined')->exists();
+                    if (! $manual) {
+                        throw ValidationException::withMessages(['decision' => __('shops.clean_evidence_required')]);
+                    }
+                }
             }
             $previous = $shop->status;
             $shop->forceFill(['status' => $decision, 'review_reason' => $review['reason'] ?? null])->save();
-            $this->audit($actor, $shop, 'shop.reviewed', ['from' => $previous, 'to' => $decision, 'reason' => $review['reason'] ?? null]);
+            $this->audit($actor, $shop, 'shop.reviewed', ['from' => $previous, 'to' => $decision, 'reason' => $review['reason'] ?? null,
+                'manual_unscanned_review' => $manual]);
 
             return $shop;
         });

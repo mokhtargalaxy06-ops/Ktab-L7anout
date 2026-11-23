@@ -22,7 +22,7 @@ it('shows transfer and shop confirmation as separate simulation totals', async (
 })
 
 it('submits a shop dispute with a reason and idempotency key', async () => {
-  vi.mocked(api.get).mockResolvedValue({ data: { data: [{
+  vi.mocked(api.get).mockImplementation(async path => path.includes('/external-payments') ? { data: { data: [], last_page: 1 } } : { data: { data: [{
     id: 'case', reference: null, shop_name: 'Fixture shop', approved_minor: '5000', allocated_minor: '5000',
     settled_minor: '0', payments: [{ id: 'payout', status: 'evidence_pending', amount_minor: '5000',
       reference: 'SIM-PAYOUT-fixture', shop_response: null }],

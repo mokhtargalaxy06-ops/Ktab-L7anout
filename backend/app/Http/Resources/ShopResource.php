@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Shop;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -25,9 +26,12 @@ class ShopResource extends JsonResource
                 'city' => $this->city->only(['name_fr', 'name_ar']),
                 'locality' => $this->locality?->only(['name_fr', 'name_ar']),
             ], null),
-            'documents' => $this->whenLoaded('documents', fn () => $this->documents->map(fn ($file) => [
-                'id' => $file->id, 'status' => $file->status, 'media_type' => $file->media_type, 'revision' => $file->revision,
-            ])),
+            'documents' => $this->whenLoaded('documents',
+                fn () => $this->documents->map(fn ($file) => [
+                    'id' => $file->id, 'status' => $file->status, 'media_type' => $file->media_type, 'revision' => $file->revision,
+                    'redacted' => $file->redacted_from_id !== null, 'shared' => $file->shared_at !== null,
+                    'local_manual_review' => $file->isAwaitingLocalReview() && $request->user()?->can('review', Shop::class),
+                ])),
         ];
     }
 }

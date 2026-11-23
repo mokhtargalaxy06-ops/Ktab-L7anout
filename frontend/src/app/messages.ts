@@ -17,7 +17,7 @@ export const messages = {
     name: 'Nom complet', email: 'Adresse e-mail', password: 'Mot de passe', confirmation: 'Confirmer le mot de passe',
     passwordHint: 'Au moins 12 caractères et au maximum 72 octets.',
     hasAccount: 'Vous avez déjà un compte ?', noAccount: 'Vous découvrez la plateforme ?',
-    loginIntro: 'Retrouvez votre compte Morocco Debt Relief.', registerIntro: 'Rejoignez l’initiative de solidarité alimentaire.',
+    loginIntro: 'Retrouvez votre compte Ktab-L7anout.', registerIntro: 'Rejoignez l’initiative de solidarité alimentaire.',
     loading: 'Chargement…', required: 'Ce champ est requis.', invalidEmail: 'Saisissez une adresse e-mail valide.',
     invalidPassword: 'Saisissez un mot de passe valide.', mismatch: 'Les mots de passe doivent être identiques.',
     failed: 'La demande a échoué. Réessayez dans un instant.', invalidLogin: 'Adresse e-mail ou mot de passe incorrect.',

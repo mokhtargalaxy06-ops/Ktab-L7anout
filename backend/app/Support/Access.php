@@ -24,7 +24,8 @@ class Access
         $abilities = ['profile.update'];
         foreach ($user->roles as $role) {
             foreach (self::ABILITIES[$role->code] ?? [] as $ability) {
-                if ($user->hasVerifiedEmail() || $ability === 'cases.browse') {
+                if ($user->hasVerifiedEmail() || in_array($role->code, self::PUBLIC_ROLES, true)
+                    || ($role->code === 'administrator' && app()->environment('local'))) {
                     $abilities[] = $ability;
                 }
             }

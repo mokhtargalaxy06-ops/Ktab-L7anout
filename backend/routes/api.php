@@ -43,11 +43,20 @@ Route::prefix('v1')->middleware(['auth:sanctum', EnsureActiveAccount::class])->g
     Route::get('/admin/finance/reconciliation.csv', [SettlementController::class, 'export'])
         ->defaults('report', 'reconciliation')->middleware('throttle:10,1');
     Route::get('/me', [AuthController::class, 'me']);
-    Route::get('/donations', [DonationController::class, 'index'])->can('create', Donation::class);
+    foreach (['admin', 'shop'] as $audience) {
+        Route::get("/$audience/external-payments", [\App\Http\Controllers\ExternalDebtPaymentController::class, 'index'])->defaults('audience', $audience);
+    }
+    Route::post('/shop/external-payments/{pledge}', [\App\Http\Controllers\ExternalDebtPaymentController::class, 'declareReceipt'])
+        ->whereUuid('pledge')->middleware('throttle:shop-evidence');
+    Route::patch('/admin/external-payments/{pledge}', [\App\Http\Controllers\ExternalDebtPaymentController::class, 'review'])
+        ->whereUuid('pledge')->middleware('throttle:10,1');
+    Route::get('/admin/external-payments/{pledge}/evidence', [\App\Http\Controllers\ExternalDebtPaymentController::class, 'evidence'])
+        ->whereUuid('pledge')->middleware('throttle:shop-evidence');
+    Route::get('/donations', [DonationController::class, 'index'])->can('viewAny', Donation::class);
     Route::post('/donations', [DonationController::class, 'create'])->can('create', Donation::class)->middleware('throttle:30,1');
     Route::get('/donations/{donation}', [DonationController::class, 'show'])->whereUuid('donation')->can('view', 'donation');
     Route::post('/donations/{donation}/simulation', [DonationController::class, 'simulate'])
-        ->whereUuid('donation')->can('view', 'donation')->middleware('throttle:30,1');
+        ->whereUuid('donation')->can('simulate', 'donation')->middleware('throttle:30,1');
     Route::post('/admin/donations/{donation}/simulate-return', [DonationController::class, 'simulateReturn'])
         ->whereUuid('donation')->can('manageReturns', Donation::class)->middleware('throttle:30,1');
     Route::patch('/me', [AccountController::class, 'update']);
@@ -67,6 +76,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', EnsureActiveAccount::class])->g
         ->whereUuid(['shop', 'debt'])->can('respond', 'shop');
 
     Route::get('/admin/shops', [ShopController::class, 'adminIndex']);
+    Route::post('/admin/shops/{shop}/documents/{document}/redacted', [ShopController::class, 'uploadRedacted'])
+        ->whereUuid(['shop', 'document'])->can('review', Shop::class)->middleware('throttle:shop-evidence');
+    Route::patch('/admin/shops/{shop}/documents/{document}/sharing', [ShopController::class, 'shareEvidence'])
+        ->whereUuid(['shop', 'document'])->can('review', Shop::class)->middleware('throttle:30,1');
+    Route::get('/donor/cases/{reference}/shop-evidence', [ShopController::class, 'donorEvidence'])
+        ->whereUuid('reference')->can('viewAny', Donation::class)->middleware('throttle:60,1');
+    Route::get('/donor/cases/{reference}/shop-evidence/{document}', [ShopController::class, 'donorDownload'])
+        ->whereUuid(['reference', 'document'])->can('viewAny', Donation::class)->middleware('throttle:30,1');
     Route::post('/admin/shops/{shop}/review', [ShopController::class, 'review'])->whereUuid('shop')->can('review', Shop::class);
     Route::post('/admin/shops/{shop}/debt-requests', [ShopController::class, 'requestDebt'])->whereUuid('shop')->can('review', Shop::class);
     Route::get('/admin/geography/{level}', [GeographyController::class, 'adminIndex'])->whereIn('level', $geographyLevels);

@@ -1,0 +1,18 @@
+[Unit]
+Description=Ktab-L7anout Laravel scheduler
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=mdr
+Group=mdr
+WorkingDirectory=/srv/mdr/current/backend
+ExecStart=/usr/bin/php8.5 artisan schedule:work
+Restart=always
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

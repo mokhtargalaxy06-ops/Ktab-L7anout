@@ -28,6 +28,9 @@ class DebtCaseResource extends JsonResource
                 'consent_version' => $this->consent_version, 'consented_at' => $this->consented_at,
             ];
         }
+        if ($this->audience === 'beneficiary') {
+            $data['shop_status'] = $this->shop->status;
+        }
         if ($admin) {
             $data['flagged'] = $this->flagged;
             $data['public_story'] = $this->public_story;
@@ -37,7 +40,8 @@ class DebtCaseResource extends JsonResource
             $data['duplicates'] = $this->duplicates;
         }
         if ($this->resource->relationLoaded('documents')) {
-            $data['documents'] = $this->documents->map(fn ($document) => $document->only(['id', 'audience', 'revision', 'media_type', 'status']));
+            $data['documents'] = $this->documents->map(fn ($document) => $document->only(['id', 'audience', 'revision', 'media_type', 'status'])
+                + ['local_manual_review' => $document->isAwaitingLocalReview()]);
         }
         if ($this->resource->relationLoaded('history')) {
             $data['history'] = $this->history->map(fn ($event) => $event->only(['action', 'audience', 'reason', 'created_at', 'revision']) + [

@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Services\SimulatedProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -11,6 +13,29 @@ use Tests\TestCase;
 class FoundationTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_staging_simulation_is_opt_in_and_production_always_blocks_it(): void
+    {
+        config(['funding.simulator_enabled' => false]);
+        $this->app->instance('env', 'staging');
+        $this->assertFalse(SimulatedProvider::enabled());
+        config(['funding.simulator_enabled' => true]);
+        $this->assertTrue(SimulatedProvider::enabled());
+        $this->app->instance('env', 'production');
+        $this->assertFalse(SimulatedProvider::enabled());
+    }
+
+    public function test_operations_check_emits_aggregate_metrics(): void
+    {
+        $summary = json_encode([
+            'failed_jobs' => 0, 'queued_jobs_over_5m' => 0, 'evidence_quarantined_over_30m' => 0,
+            'shop_evidence_quarantined_over_30m' => 0, 'funding_frozen' => true,
+            'negative_receipt_balances' => 0,
+            'payouts_unresolved_over_1h' => 0, 'refunds_waiting_over_1h' => 0,
+        ], JSON_THROW_ON_ERROR);
+        DB::table('financial_control')->where('id', 1)->update(['frozen' => true]);
+        $this->artisan('ops:check')->expectsOutput($summary)->assertSuccessful();
+    }
 
     public function test_health_and_missing_routes_return_json(): void
     {
@@ -23,6 +48,7 @@ class FoundationTest extends TestCase
         $response = $this->postJson('/register', [
             'name' => 'Test Account',
             'email' => 'TEST@example.com',
+            'phone' => '0612345678',
             'password' => 'A long test password',
             'password_confirmation' => 'A long test password',
             'locale' => 'ar',

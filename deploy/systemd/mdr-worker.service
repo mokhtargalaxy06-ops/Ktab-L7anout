@@ -1,0 +1,19 @@
+[Unit]
+Description=Ktab-L7anout Laravel queue worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=mdr
+Group=mdr
+WorkingDirectory=/srv/mdr/current/backend
+ExecStart=/usr/bin/php8.5 artisan queue:work database --sleep=3 --tries=3 --timeout=60 --max-time=3600
+Restart=always
+RestartSec=5
+TimeoutStopSec=90
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

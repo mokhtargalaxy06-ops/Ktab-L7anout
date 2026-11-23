@@ -13,7 +13,7 @@ class PublicDiscovery
         return DB::table('case_funding_reports as report')
             ->where('report.simulated', SimulatedProvider::enabled())
             ->join('debt_cases as approved', 'approved.id', '=', 'report.debt_case_id')
-            ->where('approved.approved_minor', '>', 0)
+            ->where('approved.approved_minor', '>=', 0)
             ->where('report.settled_minor', '>=', 0)
             ->whereColumn('report.settled_minor', '<=', 'report.allocated_minor')
             ->whereColumn('report.allocated_minor', '<=', 'approved.approved_minor')
@@ -36,25 +36,31 @@ class PublicDiscovery
 
     public function catalog(array $filters = []): Builder
     {
+        $external = DB::table('external_debt_payments as e')->join('donations as pledge', 'pledge.id', '=', 'e.donation_id')
+            ->where('e.status', 'approved')->groupBy('pledge.debt_case_id')
+            ->select('pledge.debt_case_id')->selectRaw('SUM(e.amount_minor) AS paid_minor');
         $query = DB::table('debt_cases as c')
             ->join('shops as s', 's.id', '=', 'c.shop_id')
             ->join('cities as city', 'city.id', '=', 'c.city_id')
             ->join('regions as region', 'region.id', '=', 'city.region_id')
             ->leftJoinSub($this->validFunding(), 'funding', 'funding.debt_case_id', '=', 'c.id')
+            ->leftJoinSub($external, 'external', 'external.debt_case_id', '=', 'c.id')
             ->where(fn (Builder $query) => $query->whereNotNull('funding.debt_case_id')
                 ->orWhereNotExists(fn (Builder $report) => $report->selectRaw('1')->from('case_funding_reports')
                     ->whereColumn('case_funding_reports.debt_case_id', 'c.id')
                     ->when(! SimulatedProvider::enabled(), fn ($report) => $report->where('simulated', false))))
             ->where('c.status', 'published')->where('c.flagged', false)
-            ->whereNotNull('c.public_reference')->where('c.published_at', '<=', now())->where('c.approved_minor', '>', 0)
+            ->whereNotNull('c.public_reference')->where('c.published_at', '<=', now())
+            ->whereRaw('c.approved_minor + COALESCE(external.paid_minor, 0) > 0')
             ->where('s.status', 'verified')->whereColumn('s.revision', 'c.verified_shop_revision')
             ->whereColumn('s.city_id', 'c.city_id')->where('city.active', true)->where('region.active', true)
             ->select([
-                'c.id as internal_id', 'c.public_reference as id', 'c.approved_minor', 'c.published_at', 'c.public_story', 'c.debt_date',
+                'c.id as internal_id', 'c.public_reference as id', 'c.published_at', 'c.public_story', 'c.debt_date',
                 'c.vulnerability_grade', 'c.access_risk_grade', 'c.revision',
                 'city.name_fr as city_fr', 'city.name_ar as city_ar', 'region.name_fr as region_fr', 'region.name_ar as region_ar',
-            ])->selectRaw('COALESCE(funding.allocated_minor, 0) AS collected_minor')
-            ->selectRaw('COALESCE(funding.settled_minor, 0) AS settled_minor')
+            ])->selectRaw('c.approved_minor + COALESCE(external.paid_minor, 0) AS approved_minor')
+            ->selectRaw('COALESCE(funding.allocated_minor, 0) + COALESCE(external.paid_minor, 0) AS collected_minor')
+            ->selectRaw('COALESCE(funding.settled_minor, 0) + COALESCE(external.paid_minor, 0) AS settled_minor')
             ->selectRaw('funding.updated_at as funding_updated_at');
 
         foreach (['region_id' => 'region.id', 'city_id' => 'city.id'] as $filter => $column) {
@@ -64,7 +70,7 @@ class PublicDiscovery
         }
         foreach (['min_minor' => '>=', 'max_minor' => '<='] as $filter => $comparison) {
             if (isset($filters[$filter])) {
-                $query->where('c.approved_minor', $comparison, (int) $filters[$filter]);
+                $query->whereRaw("c.approved_minor + COALESCE(external.paid_minor, 0) $comparison ?", [(int) $filters[$filter]]);
             }
         }
         if (isset($filters['q'])) {

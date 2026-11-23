@@ -9,7 +9,8 @@ class ShopActionRequest extends FormRequest
     public function rules(): array
     {
         return match ($this->route()->getActionMethod()) {
-            'upload' => ['document' => ['required', 'file', 'mimetypes:application/pdf,image/jpeg,image/png', 'max:5120']],
+            'upload', 'uploadRedacted' => ['document' => ['required', 'file', 'mimetypes:application/pdf,image/jpeg,image/png', 'max:5120']],
+            'shareEvidence' => ['share' => ['required', 'boolean']],
             'review' => [
                 'decision' => ['required', 'in:verified,rejected,suspended'],
                 'revision' => ['required', 'integer', 'min:1'],

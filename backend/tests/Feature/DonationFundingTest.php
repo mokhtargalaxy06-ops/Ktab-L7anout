@@ -11,8 +11,10 @@ use App\Models\Shop;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -29,6 +31,49 @@ class DonationFundingTest extends TestCase
         $this->actAs('donor');
     }
 
+    public function test_shop_declaration_credits_the_debt_without_admin_review(): void
+    {
+        Storage::fake('local');
+        $case = $this->case(3500);
+        $donor = Auth::user();
+        $id = $this->intent(3500, $case, ['whatsapp_pledge' => true])->assertCreated()->json('data.id');
+        $shopPath = "/api/v1/shop/external-payments/$id";
+        $adminPath = "/api/v1/admin/external-payments/$id";
+        $casePath = "/api/v1/cases/$case->public_reference";
+        $input = ['amount_minor' => '3500', 'reference' => 'receipt-1',
+            'evidence' => UploadedFile::fake()->createWithContent('proof.pdf', "%PDF-1.4\n")];
+        $this->post($shopPath, $input, ['Accept' => 'application/json'])->assertNotFound();
+        $owner = $this->actAs('shopkeeper');
+        Shop::findOrFail($case->shop_id)->owners()->attach($owner->id, ['granted_at' => now()]);
+        $this->post($shopPath, $input, ['Accept' => 'application/json'])->assertCreated();
+        $this->post($shopPath, $input, ['Accept' => 'application/json'])->assertConflict();
+        $this->get($adminPath.'/evidence')->assertForbidden();
+        $this->getJson($casePath)->assertJsonPath('data.remaining_minor', '0')->assertJsonPath('data.status', 'settled');
+        $this->assertDatabaseHas('audit_logs', ['target_id' => $id, 'actor_id' => $owner->id, 'action' => 'external_debt_payment.confirmed_by_shop']);
+        $this->actAs('administrator');
+        $this->get($adminPath.'/evidence')->assertOk();
+        $decision = ['decision' => 'approved', 'reason' => 'Receipt verified', 'password' => 'password'];
+        $this->patchJson($adminPath, $decision)->assertConflict();
+        $this->assertDatabaseCount('financial_events', 0);
+        Auth::forgetGuards();
+        $this->actingAs($donor, 'web')->withSession(['account_version' => $donor->session_version]);
+        $this->getJson("/api/v1/donations/$id")->assertJsonPath('data.external_receipt.status', 'approved');
+        $this->simulate($id, 'success')->assertConflict();
+    }
+
+    public function test_whatsapp_pledge_changes_balance_only_after_simulated_confirmation(): void
+    {
+        $case = $this->case(3500);
+        $id = $this->intent(1250, $case, ['whatsapp_pledge' => true], 'wa-pledge')->assertCreated()
+            ->assertJsonPath('data.whatsapp_pledge', true)->assertJsonPath('data.payment_status', 'pending')
+            ->json('data.id');
+        $this->intent(1250, $case, ['whatsapp_pledge' => true], 'wa-pledge')->assertCreated()->assertJsonPath('data.id', $id);
+        $path = "/api/v1/cases/$case->public_reference";
+        $this->getJson($path)->assertJsonPath('data.remaining_minor', '3500');
+        $this->simulate($id, 'success')->assertJsonPath('data.allocated_minor', '1250');
+        $this->getJson($path)->assertJsonPath('data.remaining_minor', '2250');
+    }
+
     public function test_specific_confirmation_rechecks_capacity_and_refunds_only_the_excess(): void
     {
         $case = $this->case(10000);
@@ -42,7 +87,8 @@ class DonationFundingTest extends TestCase
         $this->simulate($first, 'success')->assertJsonPath('data.allocated_minor', '7000');
         $this->simulate($second, 'success')->assertJsonPath('data.allocated_minor', '3000')
             ->assertJsonPath('data.return_pending_minor', '4000')->assertJsonPath('data.returned_minor', '0')
-            ->assertJsonPath('data.allocations.0.case_reference', $case->public_reference);
+            ->assertJsonPath('data.allocations.0.case_reference', $case->public_reference)
+            ->assertJsonPath('data.allocations.0.shop_whatsapp_url', 'https://wa.me/212612345678');
         $this->assertDatabaseMissing('donation_allocations', ['debt_case_id' => $other->id]);
         $this->artisan('funding:process')->assertSuccessful();
         $this->getJson("/api/v1/donations/$second")->assertJsonPath('data.returned_minor', '4000')
@@ -66,6 +112,62 @@ class DonationFundingTest extends TestCase
         $this->actAs('donor');
         $this->getJson("/api/v1/donations/$failed")->assertForbidden();
         $this->postJson("/api/v1/donations/$cancelled/simulation", ['outcome' => 'success'])->assertForbidden();
+    }
+
+    public function test_unverified_donor_can_create_and_complete_own_simulated_donation(): void
+    {
+        $donor = $this->actAs('donor');
+        $donor->forceFill(['email_verified_at' => null])->save();
+        $id = $this->create(500);
+        $this->getJson('/api/v1/donations')->assertOk()->assertJsonPath('data.0.id', $id);
+        $this->getJson("/api/v1/donations/$id")->assertOk();
+        $this->actAs('donor')->forceFill(['email_verified_at' => null])->save();
+        $this->getJson("/api/v1/donations/$id")->assertForbidden();
+        $this->simulate($id, 'success')->assertForbidden();
+        Auth::forgetGuards();
+        $this->actingAs($donor, 'web')->withSession(['account_version' => $donor->session_version]);
+        $this->simulate($id, 'success')->assertOk()->assertJsonPath('data.payment_status', 'confirmed');
+    }
+
+    public function test_donors_can_download_only_current_shared_redacted_shop_evidence(): void
+    {
+        Storage::fake('local');
+        $case = $this->case(5000);
+        $admin = $this->actAs('administrator');
+        $original = $case->shop->documents()->make([
+            'uploader_id' => $admin->id, 'revision' => 1, 'storage_key' => 'original',
+            'media_type' => 'application/pdf', 'size_bytes' => 20, 'sha256' => hash('sha256', 'original'),
+        ]);
+        $original->forceFill(['status' => 'available'])->save();
+        Storage::disk('local')->put('original', 'original');
+        $adminPath = "/api/v1/admin/shops/$case->shop_id/documents";
+        $this->get("/api/v1/shops/$case->shop_id/documents/$original->id")->assertOk();
+        $response = $this->post("$adminPath/$original->id/redacted", [
+            'document' => UploadedFile::fake()->createWithContent('redacted.pdf', "%PDF-1.4\nRedacted copy\n%%EOF\n"),
+        ], ['Accept' => 'application/json'])->assertCreated();
+        $copy = collect($response->json('data.documents'))->firstWhere('redacted', true)['id'];
+        $this->patchJson("$adminPath/$copy/sharing", ['share' => true])->assertConflict();
+        $this->patchJson("$adminPath/$original->id/sharing", ['share' => true])->assertNotFound();
+        DB::table('shop_documents')->where('id', $copy)->update(['status' => 'available']);
+        $this->patchJson("$adminPath/$copy/sharing", ['share' => true])->assertOk();
+
+        $path = "/api/v1/donor/cases/$case->public_reference/shop-evidence";
+        $this->actAs('donor');
+        $this->getJson($path)->assertExactJson([
+            'data' => [['id' => $copy, 'media_type' => 'application/pdf']],
+            'shop_whatsapp_url' => 'https://wa.me/212612345678',
+        ]);
+        $this->get("$path/$original->id")->assertNotFound();
+        $this->get("$path/$copy")->assertOk()->assertDownload("evidence-$copy.pdf");
+        $this->get("/api/v1/shops/$case->shop_id/documents/$original->id")->assertForbidden();
+        $this->patchJson("$adminPath/$copy/sharing", ['share' => true])->assertForbidden();
+        $this->actAs('beneficiary');
+        $this->getJson($path)->assertForbidden();
+        $this->actAs('administrator');
+        $this->patchJson("$adminPath/$copy/sharing", ['share' => false])->assertOk();
+        $this->actAs('donor');
+        $this->getJson($path)->assertJsonPath('data', [])
+            ->assertJsonPath('shop_whatsapp_url', 'https://wa.me/212612345678');
     }
 
     public function test_intent_is_idempotent_and_rejects_invalid_scope_amount_and_case(): void
@@ -243,6 +345,7 @@ class DonationFundingTest extends TestCase
             ->assertJsonPath('data.confirmed_minor', '0')->assertJsonPath('data.debts_settled', 0);
 
         $owner = $this->actAs('shopkeeper');
+        $owner->forceFill(['email_verified_at' => null])->save();
         $shopPath = "/api/v1/shop/settlements/$case->id/$payment";
         $this->getJson('/api/v1/shop/settlements')->assertJsonCount(0, 'data');
         $this->settlementAction($shopPath, 'confirm', admin: false)->assertForbidden();

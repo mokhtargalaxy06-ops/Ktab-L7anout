@@ -27,6 +27,8 @@ export function AuthPage({ register = false }: { register?: boolean }) {
       .refine(value => new TextEncoder().encode(value).length <= 72 && !value.includes('\0'), t.invalidPassword),
     password_confirmation: register ? z.string().min(1, t.required) : z.string().optional(),
     role: z.enum(publicRoles).optional(),
+    phone: register ? z.string().trim().min(1, t.required).max(40, labels.phoneInvalid) : z.string().optional(),
+    whatsapp_contact: z.boolean().optional(),
   }).refine(fields => !register || fields.password === fields.password_confirmation, {
     path: ['password_confirmation'], message: t.mismatch,
   })
@@ -45,8 +47,9 @@ export function AuthPage({ register = false }: { register?: boolean }) {
       const response = isAxiosError<ApiError>(error) ? error.response : undefined
       if (response?.status === 422 && response.data?.errors) {
         const serverFields = response.data.errors
-        for (const key of ['email', 'password', 'name', 'password_confirmation'] as const) {
-          if (serverFields[key]) setError(key, { message: key === 'email' ? (register ? t.duplicateEmail : t.invalidLogin) : t.invalidFields })
+        for (const key of ['email', 'password', 'name', 'password_confirmation', 'phone'] as const) {
+          if (serverFields[key]) setError(key, { message: key === 'phone' ? labels.phoneInvalid
+            : key === 'email' ? (register ? t.duplicateEmail : t.invalidLogin) : t.invalidFields })
         }
         setSubmissionError(t.invalidFields)
       } else {
@@ -68,6 +71,13 @@ export function AuthPage({ register = false }: { register?: boolean }) {
           </select>
         </label>}
         <Input {...field('email')} label={t.email} type="email" autoComplete="email" dir="ltr" error={errors.email?.message} />
+        {register && <>
+          <Input {...field('phone')} label={labels.phone} type="tel" autoComplete="tel" dir="ltr"
+            maxLength={40} hint={labels.phoneHint} error={errors.phone?.message} required />
+          <label className="flex items-start gap-2 text-sm">
+            <input {...field('whatsapp_contact')} type="checkbox" className="mt-1" />{labels.whatsappConsent}
+          </label>
+        </>}
         <Input {...field('password')} label={t.password} type="password" autoComplete={register ? 'new-password' : 'current-password'}
           hint={register ? t.passwordHint : undefined} error={errors.password?.message} />
         {register && <Input {...field('password_confirmation')} label={t.confirmation} type="password"

@@ -2,6 +2,8 @@
 
 return [
     'shop_clamscan_binary' => env('SHOP_CLAMSCAN_BINARY'),
+    'shop_local_manual_evidence_review' => env('SHOP_LOCAL_MANUAL_EVIDENCE_REVIEW', false),
+    'case_local_manual_evidence_review' => env('CASE_LOCAL_MANUAL_EVIDENCE_REVIEW', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -33,8 +35,8 @@ return [
 
         'local' => [
             'driver' => 'local',
-            'root' => storage_path('app/private'),
-            'serve' => true,
+            'root' => env('PRIVATE_STORAGE_ROOT', storage_path('app/private')),
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],

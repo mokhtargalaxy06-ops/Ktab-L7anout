@@ -8,7 +8,7 @@ import { Card } from '../../shared/ui/Card'
 import { Input } from '../../shared/ui/Input'
 import { Loading } from '../../shared/ui/Loading'
 import { useSession } from '../auth/session'
-import { mad, toMinor, type PublicCase } from '../discovery/types'
+import { mad, toMajor, toMinor, type PublicCase } from '../discovery/types'
 import { PageControls } from '../shops/ShopDashboard'
 import { useResource, withCursor, write, type Collection } from '../shops/shopApi'
 import { donationCopy } from './copy'
@@ -20,8 +20,13 @@ type Settlement = 'requested' | 'submitted' | 'unknown' | 'evidence_pending' | '
 type Donation = {
   id: string; scope: Scope; amount_minor: string; payment_status: Payment; allocation_status: Allocation;
   case_reference?: string; confirmed_at: string | null; created_at: string; captured_minor: string;
+  whatsapp_pledge?: boolean; simulation_available?: boolean
+  external_receipt?: { status: 'pending' | 'approved' | 'rejected'; amount_minor: string } | null
   allocated_minor: string; returned_minor: string; return_pending_minor: string; unallocated_minor: string;
-  allocations: { id: string; case_reference: string; amount_minor: string; original_minor: string; settlements: { amount_minor: string; status: Settlement }[] }[];
+  allocations: {
+    id: string; case_reference: string; amount_minor: string; original_minor: string; shop_whatsapp_url?: string | null
+    settlements: { amount_minor: string; status: Settlement }[]
+  }[];
   returns: { kind: 'refund' | 'reversal'; status: 'requested' | 'confirmed' | 'canceled'; amount_minor: string }[];
 }
 type Policy = { version: string; simulated: boolean; terms: { fr: string; ar: string } }
@@ -32,22 +37,23 @@ function DonationGuard({ children }: { children: ReactNode }) {
   const { locale, t } = useLocale()
   if (!ready) return <div className="container-shell py-10"><Loading label={t.loading} /></div>
   if (!user) return <Navigate to="/login" state={{ returnTo: location.pathname + location.search }} replace />
-  if (!user.abilities.includes('donations.create')) return <p role="alert" className="container-shell py-10">{donationCopy[locale].unavailable}</p>
+  if (!user.abilities.includes('donations.viewOwn')) return <p role="alert" className="container-shell py-10">{donationCopy[locale].unavailable}</p>
 
   return <section className="container-shell grid gap-5 py-10">
-    <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 font-semibold text-amber-900">{donationCopy[locale].banner}</p>
     {children}
   </section>
 }
 
 export function DonationRoutes() {
+  const { user } = useSession()
+  const canDonate = user?.abilities.includes('donations.create') ?? false
   return <DonationGuard><Routes>
-    <Route index element={<DonationHistory />} />
-    <Route path="new" element={<DonateForm />} />
-    <Route path=":id" element={<DonationDetail />} />
-    <Route path=":id/checkout" element={<DonationDetail checkout />} />
-    <Route path=":id/success" element={<DonationDetail />} />
-    <Route path=":id/failure" element={<DonationDetail />} />
+    <Route index element={<DonationHistory canDonate={canDonate} />} />
+    <Route path="new" element={canDonate ? <DonateForm /> : <Navigate to="/dashboard/donor" replace />} />
+    <Route path=":id" element={<DonationDetail canDonate={canDonate} />} />
+    <Route path=":id/checkout" element={canDonate ? <DonationDetail checkout /> : <Navigate to="/dashboard/donor" replace />} />
+    <Route path=":id/success" element={<DonationDetail canDonate={canDonate} />} />
+    <Route path=":id/failure" element={<DonationDetail canDonate={canDonate} />} />
     <Route path="*" element={<Navigate to="/donations" replace />} />
   </Routes></DonationGuard>
 }
@@ -60,20 +66,34 @@ export function DonateForm() {
   const [scope, setScope] = useState<Scope>(params.get('case') ? 'specific' : 'urgent_pool')
   const caseRef = params.get('case') ?? ''
   const info = useResource<{ data: PublicCase }>(scope === 'specific' && caseRef ? '/api/v1/cases/' + encodeURIComponent(caseRef) : null)
+  const contact = useResource<{ shop_whatsapp_url?: string | null }>(scope === 'specific' && caseRef
+    ? '/api/v1/donor/cases/' + encodeURIComponent(caseRef) + '/shop-evidence' : null)
   const terms = useResource<{ data: Policy }>('/api/v1/donation-policies/current')
-  const [amount, setAmount] = useState('50')
+  const [customAmount, setAmount] = useState<string>()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [openedMessage, setOpenedMessage] = useState('')
   const record = info?.data?.data
   const policy = terms?.data?.data
-  const minor = /^[0-9]{1,10}([.,][0-9]{1,2})?$/.test(amount) ? toMinor(amount) : '0'
-  const valid = minor !== '0' && (scope === 'urgent_pool' || (record && BigInt(minor) <= BigInt(record.remaining_minor)))
+  const balance = scope === 'specific' && record ? BigInt(record.remaining_minor) : undefined
+  const amount = customAmount ?? (balance !== undefined && balance < 5000n ? toMajor(String(balance)) : '50')
+  const normalizedAmount = amount.trim().replace(/[٠-٩۰-۹]/g, digit => String(digit.charCodeAt(0) & 15)).replace('٫', '.')
+  const minor = /^[0-9]{1,10}([.,][0-9]{1,2})?$/.test(normalizedAmount) ? toMinor(normalizedAmount) : '0'
+  const exceedsBalance = balance !== undefined && BigInt(minor) > balance
+  const valid = minor !== '0' && (scope === 'urgent_pool' || (balance !== undefined && !exceedsBalance))
+  const shopUrl = contact?.data?.shop_whatsapp_url
+  const whatsappUrl = scope === 'specific' && valid && shopUrl
+    ? shopUrl + '?text=' + encodeURIComponent(text.whatsappIntent(caseRef, mad(minor, locale))) : ''
+  const canRecordPledge = whatsappUrl !== '' && openedMessage === whatsappUrl
+  const presets = ['5000', '10000', '25000'].filter(value => balance === undefined || BigInt(value) < balance)
+  if (balance !== undefined && balance > 0n) presets.push(String(balance))
 
   async function submit() {
-    if (!valid || !policy?.simulated) return
+    if (busy || !valid || !policy || (scope === 'specific' ? !canRecordPledge : !policy.simulated)) return
     setBusy(true)
     setError('')
-    const body = { scope, ...(scope === 'specific' && { case_reference: caseRef }), amount_minor: minor, currency: 'MAD', policy_version: policy.version }
+    const body = { scope, amount_minor: minor, currency: 'MAD', policy_version: policy.version,
+      ...(scope === 'specific' && { case_reference: caseRef, whatsapp_pledge: true }) }
     const storageKey = 'donation-intent:' + JSON.stringify(body)
     const key = sessionStorage.getItem(storageKey) ?? crypto.randomUUID()
     sessionStorage.setItem(storageKey, key)
@@ -81,7 +101,7 @@ export function DonateForm() {
       await getCsrfCookie()
       const response = await api.post<{ data: Donation }>('/api/v1/donations', body, { headers: { 'Idempotency-Key': key } })
       sessionStorage.removeItem(storageKey)
-      void navigate('/donations/' + response.data.data.id + '/checkout')
+      void navigate('/donations/' + response.data.data.id + (scope === 'urgent_pool' ? '/checkout' : ''))
     } catch (failure) {
       const status = isAxiosError(failure) ? failure.response?.status : undefined
       setError(status === 409 || status === 422 ? text.invalid : t.failed)
@@ -92,39 +112,55 @@ export function DonateForm() {
 
   return <>
     <h1 className="display text-4xl">{text.donate}</h1>
-    {terms?.failed ? <p role="alert">{t.failed}</p> : !policy ? <Loading label={t.loading} />
-      : !policy.simulated ? <p>{text.unavailable}</p>
-      : <form className="grid gap-4 lg:grid-cols-2" onSubmit={event => { event.preventDefault(); void submit() }}>
+    <form className="grid gap-4 lg:grid-cols-2" onSubmit={event => { event.preventDefault(); void submit() }}>
         <Card className="grid content-start gap-4 p-6">
           <fieldset className="grid gap-2"><legend className="pb-2 font-bold">{text.type}</legend>
             {(['specific', 'urgent_pool'] as const).map(mode => <label key={mode} className="flex items-center gap-2">
-              <input type="radio" name="scope" checked={scope === mode} onChange={() => setScope(mode)} />
+              <input type="radio" name="scope" checked={scope === mode} onChange={() => { setScope(mode); setAmount(undefined); setError('') }} />
               {mode === 'specific' ? text.specific : text.pool}
             </label>)}
           </fieldset>
           {scope === 'specific' && (!record ? <ButtonLink variant="secondary" to="/cases">{text.choose}</ButtonLink>
             : <p>{text.caseLabel} · {record.city[locale === 'ar' ? 'name_ar' : 'name_fr']} · <bdi>{mad(record.remaining_minor, locale)}</bdi></p>)}
           <div className="flex flex-wrap gap-2">
-            {['50', '100', '250'].map(preset => <button key={preset} type="button" aria-pressed={amount === preset} onClick={() => setAmount(preset)}
+            {presets.map(preset => <button key={preset} type="button" aria-pressed={minor === preset} onClick={() => setAmount(toMajor(preset))}
               className="rounded-lg border border-line px-4 py-2 font-semibold aria-pressed:border-forest aria-pressed:bg-mint">
-              <bdi>{mad(toMinor(preset), locale)}</bdi>
+              <bdi>{mad(preset, locale)}</bdi>
             </button>)}
           </div>
           <Input label={text.amount} inputMode="decimal" required value={amount} onChange={event => setAmount(event.target.value)} />
+          {exceedsBalance && <p role="alert">{text.invalid}</p>}
         </Card>
         <Card className="grid content-start gap-4 p-6">
           <h2 className="display text-2xl">{text.summary}</h2>
           <p>{scope === 'specific' ? text.specific : text.pool} · <bdi className="font-bold">{mad(minor, locale)}</bdi></p>
+          {scope === 'specific' ? <>
+            <p className="text-sm text-muted">{text.whatsappIntentHelp}</p>
+            {contact?.failed ? <p role="alert">{t.failed}</p>
+              : caseRef && !contact?.data ? <Loading label={t.loading} />
+              : caseRef && !contact?.data?.shop_whatsapp_url ? <p>{text.whatsappUnavailable}</p>
+              : whatsappUrl && <a
+                className="justify-self-start rounded-lg bg-forest px-4 py-3 font-semibold text-white"
+                target="_blank" rel="noopener noreferrer"
+                href={whatsappUrl} onClick={() => setOpenedMessage(whatsappUrl)}>
+                {text.whatsapp}
+              </a>}
+            {canRecordPledge && <Button type="submit" disabled={busy || !policy}>{text.recordPledge}</Button>}
+            {canRecordPledge && terms?.failed && <p role="alert">{t.failed}</p>}
+            {error && <p role="alert">{error}</p>}
+          </> : terms?.failed ? <p role="alert">{t.failed}</p> : !policy ? <Loading label={t.loading} />
+            : !policy.simulated ? <p>{text.unavailable}</p> : <>
           <p className="text-sm text-muted">{policy.terms[locale]}</p>
           <label className="flex items-center gap-2"><input type="checkbox" required />{text.accepted}</label>
           {error && <p role="alert">{error}</p>}
           <div><Button type="submit" disabled={!valid || busy}>{text.checkout}</Button></div>
+          </>}
         </Card>
-      </form>}
+      </form>
   </>
 }
 
-export function DonationHistory() {
+export function DonationHistory({ canDonate = true }: { canDonate?: boolean }) {
   const { locale, t } = useLocale()
   const text = donationCopy[locale]
   const [cursor, setCursor] = useState('')
@@ -132,19 +168,19 @@ export function DonationHistory() {
   const result = useResource<Collection<Donation>>(withCursor('/api/v1/donations', cursor), refresh)
   return <>
     <h1 className="display text-4xl">{text.history}</h1>
-    <div className="flex flex-wrap gap-2"><ButtonLink to="/donations/new">{text.donate}</ButtonLink>
+    <div className="flex flex-wrap gap-2">{canDonate && <ButtonLink to="/donations/new">{text.donate}</ButtonLink>}
       <Button onClick={() => setRefresh(value => value + 1)}>{text.refresh}</Button></div>
     {result?.failed ? <p role="alert">{t.failed}</p> : !result?.data ? <Loading label={t.loading} /> : result.data.data.length === 0 && <p>{text.none}</p>}
     <div className="grid gap-3 md:grid-cols-2">{result?.data?.data.map(item => <Card key={item.id} className="grid gap-3 p-5">
       <p className="font-bold"><bdi>{mad(item.amount_minor, locale)}</bdi> · {item.scope === 'specific' ? text.specific : text.pool}</p>
-      <p>{text[item.payment_status]} · {text[item.allocation_status]}</p>
+      <p>{item.whatsapp_pledge && item.payment_status === 'pending' ? text.pledged : text[item.payment_status]} · {text[item.allocation_status]}</p>
       <div><ButtonLink variant="secondary" to={'/donations/' + item.id}>{text.detail}</ButtonLink></div>
     </Card>)}</div>
     <PageControls meta={result?.data?.meta} onChange={setCursor} />
   </>
 }
 
-export function DonationDetail({ checkout = false }: { checkout?: boolean }) {
+export function DonationDetail({ checkout = false, canDonate = true }: { checkout?: boolean; canDonate?: boolean }) {
   const { id } = useParams()
   const navigate = useNavigate()
   const { locale, t } = useLocale()
@@ -177,17 +213,21 @@ export function DonationDetail({ checkout = false }: { checkout?: boolean }) {
 
   return <>
     <h1 className="display text-4xl">{title}</h1>
+    {checkout && item.simulation_available !== false && <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 font-semibold text-amber-900">{text.banner}</p>}
     <Card className="grid gap-3 p-6">
       <p className="font-bold"><bdi>{mad(item.amount_minor, locale)}</bdi> · {item.scope === 'specific' ? text.specific : text.pool}</p>
-      <p>{text[item.payment_status]} · {text[item.allocation_status]}</p>
+      <p>{item.whatsapp_pledge && item.payment_status === 'pending' ? text.pledged : text[item.payment_status]} · {text[item.allocation_status]}</p>
       {item.confirmed_at && <time dateTime={item.confirmed_at}>{new Date(item.confirmed_at).toLocaleString(locale === 'ar' ? 'ar-MA' : 'fr-MA')}</time>}
+      {item.whatsapp_pledge && <p className="break-all">{text.pledgeReference} <bdi>{item.id}</bdi></p>}
+      {item.external_receipt && <p>{text.externalReceipt[item.external_receipt.status]} · <bdi>{mad(item.external_receipt.amount_minor, locale)}</bdi></p>}
       <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {([
           [text.captured, item.captured_minor], [text.allocated, item.allocated_minor],
           [text.unallocated, item.unallocated_minor], [text.queued, item.return_pending_minor], [text.returned, item.returned_minor],
         ]).map(([label, value]) => <div key={label}><dt className="text-muted">{label}</dt><dd className="font-bold"><bdi>{mad(value, locale)}</bdi></dd></div>)}
       </dl>
-      {checkout && item.payment_status === 'pending' && <div className="flex flex-wrap gap-2">
+      {checkout && item.payment_status === 'pending' && item.simulation_available !== false
+        && (!item.external_receipt || item.external_receipt.status === 'rejected') && <div className="flex flex-wrap gap-2">
         {([['success', text.success], ['pending', text.wait], ['failed', text.failure], ['cancelled', text.cancel]]).map(([code, label]) =>
           <Button key={code} disabled={busy} onClick={() => void simulate(code)}>{label}</Button>)}
       </div>}
@@ -198,6 +238,11 @@ export function DonationDetail({ checkout = false }: { checkout?: boolean }) {
       {item.allocations.length === 0 && <p>{text.none}</p>}
       {item.allocations.map(allocation => <div key={allocation.id} className="border-t border-line pt-3">
         <p><bdi className="break-all">{allocation.case_reference}</bdi> · <bdi>{mad(allocation.amount_minor, locale)}</bdi></p>
+        {item.payment_status === 'confirmed' && allocation.shop_whatsapp_url && <a
+          className="inline-block py-2 font-semibold text-forest underline" target="_blank" rel="noopener noreferrer"
+          href={allocation.shop_whatsapp_url + '?text=' + encodeURIComponent(text.whatsappMessage(
+            allocation.case_reference, mad(allocation.amount_minor, locale),
+          ))}>{text.whatsapp}</a>}
         <p className="text-sm font-semibold">{text.settlement}</p>
         {allocation.settlements.length ? allocation.settlements.map((line, index) => <p key={index}>
           {text[line.status]} · <bdi>{mad(line.amount_minor, locale)}</bdi></p>) : <p className="text-muted">{text.noSettlement}</p>}
@@ -209,7 +254,8 @@ export function DonationDetail({ checkout = false }: { checkout?: boolean }) {
     </Card>}
     <div className="flex flex-wrap gap-2">
       <ButtonLink variant="secondary" to="/donations">{text.history}</ButtonLink>
-      {!checkout && item.payment_status === 'pending' && <ButtonLink to={route + '/checkout'}>{text.checkout}</ButtonLink>}
+      {!checkout && canDonate && item.payment_status === 'pending' && item.simulation_available !== false
+        && (!item.external_receipt || item.external_receipt.status === 'rejected') && <ButtonLink to={route + '/checkout'}>{text.checkout}</ButtonLink>}
       <Button onClick={() => setRefresh(value => value + 1)}>{text.refresh}</Button>
     </div>
   </>

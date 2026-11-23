@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Exceptions\DebtCaseConflict;
 use App\Models\BeneficiaryProfile;
 use App\Models\DebtCase;
+use App\Models\DebtDocument;
 use App\Models\Shop;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -11,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class DebtWorkflow
@@ -41,10 +44,12 @@ class DebtWorkflow
     public function save(User $actor, ?DebtCase $case, array $input): DebtCase
     {
         return DB::transaction(function () use ($actor, $case, $input) {
-            $shop = Shop::where('status', 'verified')
+            $shop = Shop::whereIn('status', Shop::APPLICATION_DRAFT_STATUSES)
                 ->whereHas('city', fn ($city) => $city->where('active', true)->whereHas('region', fn ($region) => $region->where('active', true)))
                 ->find($input['shop_id']);
-            abort_unless($shop && $shop->city_id === $input['city_id'], 422);
+            if (! $shop || $shop->city_id !== $input['city_id']) {
+                throw ValidationException::withMessages(['shop_id' => __('cases.invalid_shop')]);
+            }
             abort_if($shop->owners()->whereKey($actor->id)->exists(), 403);
             if ($case) {
                 $case = DebtCase::lockForUpdate()->findOrFail($case->id);
@@ -78,7 +83,7 @@ class DebtWorkflow
                 'admin' => 'review',
             }, $audience === 'admin' ? DebtCase::class : $case);
             abort_if($audience === 'admin' && $case->profile->user_id === $actor->id, 403);
-            abort_if(isset($data['revision']) && (int) $data['revision'] !== $case->revision, 409);
+            throw_if(isset($data['revision']) && (int) $data['revision'] !== $case->revision, DebtCaseConflict::class, 'stale_revision');
             $state = $case->status;
             $wasFlagged = $case->flagged;
             $next = match ([$audience, $action]) {
@@ -96,9 +101,11 @@ class DebtWorkflow
                 ['admin', 'flag'], ['admin', 'clear_flag'] => in_array($state, ['submitted', 'pending_verification', 'disputed', 'under_review', 'approved'], true) ? $state : null,
                 default => null,
             };
-            abort_unless($next, 409);
+            throw_unless($next, DebtCaseConflict::class, 'invalid_transition');
             if (in_array($action, ['request_info', 'reject'], true)) {
                 abort_if(DB::table('donation_allocations')->where('debt_case_id', $case->id)->exists(), 409);
+                abort_if(DB::table('external_debt_payments as e')->join('donations as d', 'd.id', '=', 'e.donation_id')
+                    ->where('d.debt_case_id', $case->id)->where('e.status', 'approved')->exists(), 409);
             }
             $this->apply($case, $shop, $action, $data);
             $case->status = $next;
@@ -119,10 +126,11 @@ class DebtWorkflow
     private function apply(DebtCase $case, Shop $shop, string $action, array $data): void
     {
         if (in_array($action, ['submit', 'route', 'confirm', 'approve', 'publish', 'reopen_dispute'], true)) {
-            abort_unless($shop->status === 'verified' && $shop->city_id === $case->city_id, 409);
+            throw_unless($shop->status === 'verified' && $shop->city_id === $case->city_id, DebtCaseConflict::class, 'shop_not_eligible');
         }
         if ($action === 'submit') {
-            abort_unless($case->documents()->where('audience', 'beneficiary')->where('revision', $case->revision)->where('status', 'available')->exists(), 409, __('cases.evidence_required'));
+            abort_unless($case->documents()->where('audience', 'beneficiary')->where('revision', $case->revision)
+                ->whereIn('status', DebtDocument::SUBMISSION_STATUSES)->exists(), 409, __('cases.evidence_required'));
             $case->forceFill(['consent_version' => $data['consent_version'], 'consented_at' => now()]);
         }
         if ($action === 'confirm') {
@@ -130,9 +138,10 @@ class DebtWorkflow
             $case->verified_shop_revision = $shop->revision;
         }
         if (in_array($action, ['approve', 'publish'], true)) {
-            abort_if($case->flagged || $case->verified_shop_revision !== $shop->revision, 409);
-            abort_if(DebtCase::where('shop_id', $shop->id)->where('debt_reference', $case->debt_reference)
-                ->whereKeyNot($case->id)->whereIn('status', ['approved', 'published'])->exists(), 409);
+            throw_if($case->flagged, DebtCaseConflict::class, 'flagged');
+            throw_if($case->verified_shop_revision !== $shop->revision, DebtCaseConflict::class, 'shop_revision_changed');
+            throw_if(DebtCase::where('shop_id', $shop->id)->where('debt_reference', $case->debt_reference)
+                ->whereKeyNot($case->id)->whereIn('status', ['approved', 'published'])->exists(), DebtCaseConflict::class, 'duplicate_approved');
         }
         if ($action === 'approve') {
             $case->approved_minor = $case->amount_minor;

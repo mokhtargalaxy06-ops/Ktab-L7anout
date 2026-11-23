@@ -15,9 +15,14 @@ class AccountController extends Controller
 {
     public function update(UpdateProfileRequest $request): JsonResponse
     {
-        $request->user()->update($request->validated());
+        $user = $request->user();
+        $user->fill($request->validated());
+        if ($user->phone === null) {
+            $user->whatsapp_contact = false;
+        }
+        $user->save();
 
-        return UserResource::make($request->user())->response()->header('Cache-Control', 'no-store');
+        return UserResource::make($user)->response()->header('Cache-Control', 'no-store');
     }
 
     public function index(Request $request): JsonResponse

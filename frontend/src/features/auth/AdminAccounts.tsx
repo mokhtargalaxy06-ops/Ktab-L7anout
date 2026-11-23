@@ -118,9 +118,13 @@ export function AdminAccounts() {
           <div className="min-w-0">
             <p className="font-semibold">{account.name}</p>
             <p className="break-all text-sm text-muted"><bdi>{account.email}</bdi></p>
+            {account.phone && <p className="text-sm text-muted"><bdi>{account.phone}</bdi></p>}
           </div>
           <span>{text[account.status]}</span>
           <Link className="font-semibold text-forest underline" to={'/dashboard/administrator/audit?target=' + account.id}>{admin.activity}</Link>
+          {account.whatsapp_contact && account.phone && /^\+[1-9][0-9]{6,14}$/.test(account.phone) &&
+            <a className="font-semibold text-forest underline" href={'https://wa.me/' + account.phone.slice(1)}
+              target="_blank" rel="noopener noreferrer">{accountCopy[locale].whatsapp}</a>}
           {!account.roles.includes('administrator') && account.status !== 'closed' && <Button onClick={() => open(account)}>{text.change}</Button>}
         </li>)}
       </ul>

@@ -36,6 +36,9 @@ return [
     */
 
     'mailers' => [
+        'local_spool' => [
+            'transport' => 'local_spool',
+        ],
 
         'smtp' => [
             'transport' => 'smtp',

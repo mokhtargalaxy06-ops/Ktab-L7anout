@@ -41,6 +41,7 @@ describe('foundation routes', () => {
     open('/register')
     fireEvent.change(screen.getByLabelText('Nom complet'), { target: { value: 'Test local' } })
     fireEvent.change(screen.getByLabelText('Adresse e-mail'), { target: { value: 'test@example.com' } })
+    fireEvent.change(screen.getByLabelText('Numéro de téléphone'), { target: { value: '0612345678' } })
     fireEvent.change(screen.getByLabelText('Mot de passe', { exact: true }), { target: { value: 'A long test password' } })
     fireEvent.change(screen.getByLabelText('Confirmer le mot de passe'), { target: { value: 'wrong confirmation' } })
     await userEvent.click(screen.getByRole('button', { name: 'Créer un compte' }))

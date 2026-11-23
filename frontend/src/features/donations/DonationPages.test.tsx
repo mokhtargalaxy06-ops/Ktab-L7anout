@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { expect, it, vi } from 'vitest'
@@ -37,6 +37,44 @@ it('submits exact minor units with an idempotency key after consent', async () =
   expect(api.post).toHaveBeenCalledWith('/api/v1/donations', {
     scope: 'urgent_pool', amount_minor: '1875', currency: 'MAD', policy_version: 'mvp-1',
   }, { headers: { 'Idempotency-Key': expect.any(String) } })
+})
+
+it('prefills a small case balance and allows a smaller custom contribution', async () => {
+  vi.mocked(api.get).mockImplementation(async path => ({ data: path.endsWith('/shop-evidence')
+    ? { shop_whatsapp_url: 'https://wa.me/212612345678' }
+    : { data: { remaining_minor: '3500', city: { name_fr: 'Fès' } } } }))
+  render(<MemoryRouter initialEntries={['/donations/new?case=case-1']}><LocaleProvider><DonateForm /></LocaleProvider></MemoryRouter>)
+
+  const input = await screen.findByDisplayValue('35.00')
+  const linkName = 'Envoyer un message WhatsApp à l’épicerie'
+  expect(await screen.findByRole('link', { name: linkName })).toBeVisible()
+  await userEvent.clear(input)
+  await userEvent.type(input, '36')
+  expect(screen.queryByRole('link', { name: linkName })).not.toBeInTheDocument()
+  expect(screen.getByRole('alert')).toBeVisible()
+  await userEvent.clear(input)
+  await userEvent.type(input, '12,50')
+  const link = screen.getByRole('link', { name: linkName })
+  expect(new URL(link.getAttribute('href')!).searchParams.get('text')).toMatch(/12,50.*case-1/)
+})
+
+it('opens a prefilled Arabic WhatsApp message for a contribution entered with Arabic digits', async () => {
+  localStorage.setItem('mdr-locale', 'ar')
+  vi.mocked(api.get).mockImplementation(async path => ({ data: path.endsWith('/shop-evidence')
+    ? { shop_whatsapp_url: 'https://wa.me/212612345678' }
+    : { data: { remaining_minor: '3500', city: { name_ar: 'فاس' } } } }))
+  try {
+    render(<MemoryRouter initialEntries={['/donations/new?case=case-1']}><LocaleProvider><DonateForm /></LocaleProvider></MemoryRouter>)
+    const input = await screen.findByDisplayValue('35.00')
+    expect(document.documentElement).toHaveAttribute('dir', 'rtl')
+    fireEvent.change(input, { target: { value: '١٢٫٥٠' } })
+    const link = await screen.findByRole('link', { name: 'إرسال رسالة واتساب إلى البقالة' })
+    const url = new URL(link.getAttribute('href')!)
+    expect(url.origin + url.pathname).toBe('https://wa.me/212612345678')
+    expect(url.searchParams.get('text')).toMatch(/أود المساهمة.*(?:12[,.]50|١٢٫٥٠).*case-1/u)
+  } finally {
+    localStorage.removeItem('mdr-locale')
+  }
 })
 
 it('shows the failure screen only after the simulated payment result', async () => {

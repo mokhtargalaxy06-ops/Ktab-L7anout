@@ -6,8 +6,10 @@ use App\Models\City;
 use App\Models\Locality;
 use App\Models\Region;
 use App\Models\Role;
+use App\Models\Shop;
 use App\Models\ShopDocument;
 use App\Models\User;
+use App\Services\ShopWorkflow;
 use Database\Seeders\MoroccoGeographySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -68,6 +70,21 @@ class ShopGeographyTest extends TestCase
         $this->patchJson("/api/v1/shop/shops/$shop", $input)->assertForbidden();
     }
 
+    public function test_unverified_shopkeeper_can_manage_own_shop_and_open_assigned_workspaces(): void
+    {
+        $owner = $this->account('shopkeeper');
+        $owner->forceFill(['email_verified_at' => null])->save();
+        $input = $this->profile();
+        $shop = $this->asSession($owner)->postJson('/api/v1/shop/shops', $input)->assertCreated()
+            ->assertJsonPath('data.status', 'pending')->json('data.id');
+        $this->getJson('/api/v1/shop/shops')->assertOk()->assertJsonCount(1, 'data');
+        $this->getJson("/api/v1/shops/$shop")->assertOk()->assertJsonPath('data.documents', []);
+        $this->patchJson("/api/v1/shop/shops/$shop", $input)->assertOk();
+        $this->getJson("/api/v1/shops/$shop/debt-requests")->assertOk()->assertJsonPath('data', []);
+        config(['funding.simulator_enabled' => true]);
+        $this->getJson('/api/v1/shop/settlements')->assertOk()->assertJsonPath('data', []);
+    }
+
     public function test_admin_controls_geography_and_inactive_parents_hide_descendants(): void
     {
         $input = ['code' => 'local-test', 'name_fr' => 'Fixture', 'name_ar' => 'اختبار', 'source_url' => 'https://example.test/source', 'source_date' => '2024-01-01', 'active' => true];
@@ -100,6 +117,7 @@ class ShopGeographyTest extends TestCase
     {
         Storage::fake('local');
         $owner = $this->account('shopkeeper');
+        $owner->forceFill(['email_verified_at' => null])->save();
         $admin = $this->account('administrator');
         $other = $this->account('shopkeeper');
         $input = $this->profile();
@@ -131,6 +149,7 @@ class ShopGeographyTest extends TestCase
         $this->postJson($path, ['decision' => 'confirmed'])->assertForbidden();
         $this->get($download)->assertForbidden();
         $this->asSession($owner)->getJson("/api/v1/shops/$shop/debt-requests")->assertOk()->assertJsonPath('data.0.reference', 'DEBT-1');
+        $this->get($download)->assertOk();
         $this->postJson($path, ['decision' => 'disputed'])->assertUnprocessable();
         $this->postJson($path, ['decision' => 'disputed', 'reason' => 'Amount differs'])->assertOk()->assertJsonPath('data.status', 'disputed');
         $this->postJson($path, ['decision' => 'confirmed'])->assertConflict();
@@ -142,6 +161,26 @@ class ShopGeographyTest extends TestCase
         $this->postJson($review, ['decision' => 'rejected', 'revision' => 2, 'reason' => 'Evidence required'])
             ->assertOk()->assertJsonPath('data.status', 'rejected');
         $this->assertDatabaseHas('audit_logs', ['target_id' => $shop, 'action' => 'shop.reviewed']);
+    }
+
+    public function test_local_manual_approval_keeps_the_original_marked_unscanned(): void
+    {
+        Storage::fake('local');
+        $owner = $this->account('shopkeeper');
+        $shop = $this->asSession($owner)->postJson('/api/v1/shop/shops', $this->profile())->assertCreated()->json('data.id');
+        $document = $this->post("/api/v1/shop/shops/$shop/documents", [
+            'document' => UploadedFile::fake()->createWithContent('review.pdf', "%PDF-1.4\n%%EOF\n"),
+        ], ['Accept' => 'application/json'])->assertCreated()->json('data.documents.0.id');
+        $admin = $this->account('administrator');
+        config(['filesystems.shop_local_manual_evidence_review' => true]);
+        $this->asSession($admin)->postJson("/api/v1/admin/shops/$shop/review", ['decision' => 'verified', 'revision' => 1])
+            ->assertUnprocessable();
+        $this->app->instance('env', 'local');
+        $this->getJson("/api/v1/shops/$shop")->assertJsonPath('data.documents.0.local_manual_review', true);
+        $this->get("/api/v1/shops/$shop/documents/$document")->assertOk();
+        $updated = app(ShopWorkflow::class)->review($admin, Shop::findOrFail($shop), ['decision' => 'verified', 'revision' => 1]);
+        $this->assertSame('verified', $updated->status);
+        $this->assertDatabaseHas('shop_documents', ['id' => $document, 'status' => 'quarantined']);
     }
 
     public function test_incomplete_scan_does_not_block_other_quarantined_documents(): void

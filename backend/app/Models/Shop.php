@@ -12,6 +12,8 @@ class Shop extends Model
 {
     use HasUuids;
 
+    public const APPLICATION_DRAFT_STATUSES = ['pending', 'verified'];
+
     protected $fillable = ['name', 'city_id', 'locality_id', 'contact_phone', 'contact_email'];
 
     public function city(): BelongsTo

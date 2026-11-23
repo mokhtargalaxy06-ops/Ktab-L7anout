@@ -1,5 +1,9 @@
 const copy = {
   fr: {
+    phone: 'Numéro de téléphone', phoneHint: 'Ex. 06 12 34 56 78 ou +212 612 345 678',
+    phoneInvalid: 'Saisissez un numéro marocain ou un numéro avec son indicatif international.',
+    whatsappConsent: 'J’autorise les administrateurs à me contacter sur WhatsApp.',
+    whatsapp: 'Contacter sur WhatsApp',
     role: 'Type de compte', donor: 'Donateur', beneficiary: 'Bénéficiaire', shopkeeper: 'Épicier', administrator: 'Administrateur',
     dashboard: 'Mon espace', profile: 'Mon profil', save: 'Enregistrer', saved: 'Profil enregistré.',
     verify: 'Vérifiez votre adresse e-mail pour accéder aux fonctions de votre espace.',
@@ -17,6 +21,10 @@ const copy = {
     pending: 'Fonctions prévues pour une prochaine phase.',
   },
   ar: {
+    phone: 'رقم الهاتف', phoneHint: 'مثال: ‎06 12 34 56 78 أو ‎+212 612 345 678',
+    phoneInvalid: 'أدخل رقماً مغربياً أو رقماً مع رمز الاتصال الدولي.',
+    whatsappConsent: 'أوافق على أن يتواصل معي المسؤولون عبر واتساب.',
+    whatsapp: 'التواصل عبر واتساب',
     role: 'نوع الحساب', donor: 'متبرع', beneficiary: 'مستفيد', shopkeeper: 'بقال', administrator: 'مسؤول',
     dashboard: 'مساحتي', profile: 'ملفي الشخصي', save: 'حفظ', saved: 'تم حفظ الملف الشخصي.',
     verify: 'تحقق من عنوان بريدك الإلكتروني للوصول إلى وظائف مساحتك.',

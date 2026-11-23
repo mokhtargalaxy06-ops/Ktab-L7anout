@@ -5,6 +5,8 @@ export interface User {
   id: string
   name: string
   email: string
+  phone?: string | null
+  whatsapp_contact?: boolean
   locale: Locale
   roles: string[]
   abilities: string[]

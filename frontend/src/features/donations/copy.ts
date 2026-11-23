@@ -1,6 +1,16 @@
 export const donationCopy = {
   fr: {
-    donate: 'Contribuer en simulation', history: 'Historique des dons', simulate: 'Paiement simulé',
+    pledgeReference: 'Référence de contribution à communiquer à l’épicerie',
+    externalReceipt: { pending: 'Paiement reçu déclaré · vérification en cours', approved: 'Réception du paiement confirmée', rejected: 'Déclaration de paiement rejetée' },
+    pledged: 'Contribution promise',
+    recordPledge: 'J’ai envoyé le message · Enregistrer ma promesse',
+    whatsappIntent: (reference: string, amount: string) => `Bonjour, je souhaite contribuer à hauteur de ${amount} au dossier ${reference} sur Ktab-L7anout.`,
+    whatsappIntentHelp: 'Envoyez votre proposition à l’épicerie via WhatsApp. Aucun paiement n’est enregistré sur la plateforme à cette étape.',
+    whatsappUnavailable: 'Cette épicerie ne dispose pas d’un numéro WhatsApp de contact valide.',
+    whatsapp: 'Envoyer un message WhatsApp à l’épicerie',
+    whatsappMessage: (reference: string, amount: string) =>
+      `Bonjour, ma contribution de ${amount} au dossier ${reference} a été enregistrée en simulation sur Ktab-L7anout. Aucun paiement réel n’a été effectué.`,
+    donate: 'Contribution', history: 'Historique des dons', simulate: 'Paiement simulé',
     banner: 'Environnement de simulation. Aucun paiement réel.',
     specific: 'Dossier précis', pool: 'Fonds des dettes urgentes', type: 'Type de don', amount: 'Montant (MAD)', custom: 'Montant personnalisé',
     summary: 'Récapitulatif', caseLabel: 'Dossier', choose: 'Choisir un dossier publié', checkout: 'Continuer vers la simulation',
@@ -17,7 +27,17 @@ export const donationCopy = {
     invalid: 'Vérifiez le montant et le solde du dossier.', back: 'Retour à la liste',
   },
   ar: {
-    donate: 'المساهمة بالمحاكاة', history: 'سجل التبرعات', simulate: 'دفع محاكى',
+    pledgeReference: 'مرجع المساهمة لمشاركته مع البقالة',
+    externalReceipt: { pending: 'تم التصريح بالاستلام · قيد المراجعة', approved: 'تم تأكيد استلام الدفع', rejected: 'تم رفض تصريح الدفع' },
+    pledged: 'مساهمة موعودة',
+    recordPledge: 'أرسلت الرسالة · تسجيل وعد المساهمة',
+    whatsappIntent: (reference: string, amount: string) => `مرحباً، أود المساهمة بمبلغ ${amount} للملف ${reference} على Ktab-L7anout.`,
+    whatsappIntentHelp: 'أرسل مبلغ المساهمة المقترح إلى البقالة عبر واتساب. لا تُسجّل المنصة أي دفعة في هذه الخطوة.',
+    whatsappUnavailable: 'لا يتوفر رقم واتساب صالح للتواصل مع هذه البقالة.',
+    whatsapp: 'إرسال رسالة واتساب إلى البقالة',
+    whatsappMessage: (reference: string, amount: string) =>
+      `مرحباً، سُجّلت مساهمتي بقيمة ${amount} للملف ${reference} في وضع المحاكاة على Ktab-L7anout. لم يُجرَ أي دفع فعلي.`,
+    donate: 'المساهمة', history: 'سجل التبرعات', simulate: 'دفع محاكى',
     banner: 'هذه بيئة محاكاة. لا توجد مدفوعات حقيقية.',
     specific: 'ملف محدد', pool: 'صندوق الديون العاجلة', type: 'نوع التبرع', amount: 'المبلغ (درهم)', custom: 'مبلغ آخر',
     summary: 'الملخص', caseLabel: 'الملف', choose: 'اختر ملفاً منشوراً', checkout: 'متابعة المحاكاة',

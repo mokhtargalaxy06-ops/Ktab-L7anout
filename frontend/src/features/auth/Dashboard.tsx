@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
+import { isAxiosError } from 'axios'
 import { Navigate, Route, Routes } from 'react-router'
 import { useLocale } from '../../app/locale'
 import { api, getCsrfCookie } from '../../shared/api/client'
@@ -20,6 +21,8 @@ function ProfileForm({ user }: { user: User }) {
   const labels = copy[locale]
   const { setUser } = useSession()
   const [name, setName] = useState(user.name)
+  const [phone, setPhone] = useState(user.phone ?? '')
+  const [whatsappContact, setWhatsappContact] = useState(user.whatsapp_contact ?? false)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -32,11 +35,15 @@ function ProfileForm({ user }: { user: User }) {
     setBusy(true)
     try {
       await getCsrfCookie()
-      const response = await api.patch<{ data: User }>('/api/v1/me', { name: trimmedName, locale })
+      const response = await api.patch<{ data: User }>('/api/v1/me', {
+        name: trimmedName, locale, phone: phone.trim() || null, whatsapp_contact: Boolean(phone.trim()) && whatsappContact,
+      })
       setUser(response.data.data)
+      setPhone(response.data.data.phone ?? '')
+      setWhatsappContact(response.data.data.whatsapp_contact ?? false)
       setMessage(labels.saved)
-    } catch {
-      setError(t.failed)
+    } catch (failure) {
+      setError(isAxiosError(failure) && failure.response?.data?.errors?.phone ? labels.phoneInvalid : t.failed)
     } finally {
       setBusy(false)
     }
@@ -47,6 +54,12 @@ function ProfileForm({ user }: { user: User }) {
     <form className="grid gap-4" onSubmit={event => { event.preventDefault(); void save() }}>
       <Input label={t.name} value={name} maxLength={120} onChange={event => setName(event.target.value)} />
       <Input label={t.email} readOnly value={user.email} dir="ltr" />
+      <Input label={labels.phone} type="tel" autoComplete="tel" dir="ltr" maxLength={40}
+        value={phone} hint={labels.phoneHint} onChange={event => setPhone(event.target.value)} />
+      <label className="flex items-start gap-2 text-sm">
+        <input type="checkbox" disabled={!phone.trim()} checked={Boolean(phone.trim()) && whatsappContact}
+          onChange={event => setWhatsappContact(event.target.checked)} className="mt-1" />{labels.whatsappConsent}
+      </label>
       <div><Button type="submit" disabled={busy}>{busy ? t.loading : labels.save}</Button></div>
       {message && <p role="status">{message}</p>}
       {error && <p role="alert" className="text-red-800">{error}</p>}
@@ -79,12 +92,14 @@ function DashboardPage({ role, user }: { role: AccountRole; user: User }) {
   if (!user.roles.includes(role)) return <section className="container-shell py-12">
     <h1 className="display mb-5 text-3xl">{labels.forbidden}</h1><ButtonLink to={accountDashboard(user.roles)}>{labels.dashboard}</ButtonLink>
   </section>
-  if (role === 'administrator' && user.email_verified) return <Suspense fallback={<Loading label={t.loading} />}><AdminWorkspace /></Suspense>
+  if (role === 'administrator' && user.abilities.includes('users.review')) {
+    return <Suspense fallback={<Loading label={t.loading} />}><AdminWorkspace /></Suspense>
+  }
 
   return <section className="container-shell py-10">
     <p className="mb-2 font-semibold text-forest">{labels[role]}</p>
     <h1 className="display mb-6 text-4xl">{labels.dashboard}</h1>
-    {!user.email_verified && <Card className="mb-5 flex flex-wrap items-center justify-between gap-3 bg-mint p-4">
+    {!user.email_verified && role === 'administrator' && <Card className="mb-5 flex flex-wrap items-center justify-between gap-3 bg-mint p-4">
       <p>{labels.verify}</p>
       <Button disabled={busy} onClick={() => void resend()}>{busy ? t.loading : labels.resend}</Button>
       {notice && <p role="status">{notice}</p>}
@@ -93,16 +108,14 @@ function DashboardPage({ role, user }: { role: AccountRole; user: User }) {
     <div className="grid gap-5 md:grid-cols-[1fr_1.4fr]">
       <ProfileForm user={user} />
       <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2">
-        {role === 'donor' && labels.sections[role].map(section => <Card key={section} className="p-5">
-          <h2 className="mb-2 text-lg font-bold">{section}</h2><p className="text-muted">{labels.pending}</p>
-        </Card>)}
+        {role === 'donor' && <Card className="grid justify-items-start gap-3 p-5">
+          <ButtonLink variant="secondary" to="/cases">{labels.sections.donor[0]}</ButtonLink>
+          {user.abilities.includes('donations.viewOwn') && <ButtonLink variant="secondary" to="/donations">{donationCopy[locale].history}</ButtonLink>}
+          {user.abilities.includes('donations.create') && <ButtonLink to="/donations/new">{donationCopy[locale].donate}</ButtonLink>}
+        </Card>}
       </div>
     </div>
     {role === 'shopkeeper' && user.abilities.includes('shops.manageAssigned') && <ShopDashboard />}
-    {role === 'donor' && user.abilities.includes('donations.create') && <div className="mt-5 flex flex-wrap gap-3">
-      <ButtonLink to="/donations">{donationCopy[locale].history}</ButtonLink>
-      <ButtonLink variant="secondary" to="/donations/new">{donationCopy[locale].donate}</ButtonLink>
-    </div>}
     <Suspense fallback={<Loading label={t.loading} />}>
       {role === 'beneficiary' && user.abilities.includes('applications.submit') && <CaseDashboard audience="beneficiary" />}
       {role === 'shopkeeper' && user.abilities.includes('verifications.respondAssigned') && <CaseDashboard audience="shop" />}

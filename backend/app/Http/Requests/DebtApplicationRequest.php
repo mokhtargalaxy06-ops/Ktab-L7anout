@@ -18,4 +18,12 @@ class DebtApplicationRequest extends FormRequest
             'household_size' => ['nullable', 'integer', 'min:1', 'max:50'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'debt_reference.regex' => __('cases.invalid_reference'),
+            'debt_date.before_or_equal' => __('cases.future_debt_date'),
+        ];
+    }
 }
