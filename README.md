@@ -12,6 +12,8 @@ For questions about Ktab-L7anout or to discuss a collaboration, email Mokhtar So
 
 [mokhtargalaxy06@gmail.com](mailto:mokhtargalaxy06@gmail.com)
 
+[LinkedIn — Mokhtar Soumair](https://www.linkedin.com/in/mokhtar-soumair-4b8855394/)
+
 ## Soutenir le projet
 
 Vous souhaitez aider **Ktab-L7anout** à ouvrir au public ? Vous pouvez soutenir le projet par virement bancaire. Votre contribution aide à couvrir le développement, les tests et l’hébergement. Le virement est versé sur le compte personnel du porteur du projet pour soutenir son lancement. Les contributions destinées à régler une dette suivent le parcours du dossier sur la plateforme.
