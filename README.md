@@ -1,6 +1,6 @@
 # [Ktab-L7anout](https://github.com/mokhtargalaxy06-ops/Ktab-L7anout)
 
-[العربية](#ما-هو-مشروع-ktab-l7anout) · [Français](#guide-en-français) · [English](#english-guide) · [لقطات الواجهة](#لقطات-الواجهة-العربية) · [Correctifs récents](#correctifs-récents) · [Contact](#contact) · [Soutenir le projet](#soutenir-le-projet) · [Installation](#local-setup)
+[العربية](#ما-هو-مشروع-ktab-l7anout) · [Français](#guide-en-français) · [English](#english-guide) · [لقطات الواجهة](#لقطات-الواجهة-العربية) · [Correctifs récents](#correctifs-récents) · [Contact](#contact) · [Installation](#local-setup)
 
 ## Correctifs récents
 
@@ -37,27 +37,6 @@ For questions about Ktab-L7anout or to discuss a collaboration, email Mokhtar So
 ## Contribuer au projet
 
 Consultez le [guide de contribution](CONTRIBUTING.md) pour proposer une modification ou ouvrir une pull request. Pour signaler un problème ou proposer une amélioration, choisissez un modèle dans les [issues GitHub](https://github.com/mokhtargalaxy06-ops/Ktab-L7anout/issues/new/choose). Les contributions sont les bienvenues en français, en arabe et en anglais.
-
-## Soutenir le projet
-
-Vous souhaitez aider **Ktab-L7anout** à ouvrir au public ? Vous pouvez soutenir le projet par virement bancaire. Votre contribution aide à couvrir le développement, les tests et l’hébergement. Le virement est versé sur le compte personnel du porteur du projet pour soutenir son lancement. Les contributions destinées à régler une dette suivent le parcours du dossier sur la plateforme.
-
-**Support the project.** If you’d like to help bring **Ktab-L7anout** to the public, you can contribute by bank transfer. Your support helps cover development, testing, and hosting. Transfers go to the project creator’s personal account to support the launch. Contributions toward individual grocery debts follow the case workflow on the platform.
-
-<div dir="rtl">
-
-**ادعم المشروع.** إذا رغبت في المساعدة على إتاحة **Ktab-L7anout** للعموم، يمكنك تقديم دعم مالي عبر تحويل بنكي للمساهمة في تكاليف التطوير والاختبار والاستضافة. يُحوّل الدعم إلى الحساب الشخصي لصاحب المشروع لدعم إطلاقه. أما المساهمات المخصصة لتسوية ديون البقالة فتتم عبر مسار الملف على المنصة.
-
-</div>
-
-| Coordonnées bancaires / Bank details / البيانات البنكية | |
-| --- | --- |
-| Titulaire / Account holder / صاحب الحساب | SOUMAIR MOKHTAR |
-| Banque / Bank / البنك | Attijariwafa bank |
-| RIB | `007450000611470030012551` |
-| IBAN | `MA64007450000611470030012551` |
-| BIC / SWIFT | `BCMAMAMC` |
-| Motif suggéré / Suggested reference / مرجع التحويل المقترح | `Soutien Ktab-L7anout` |
 
 <div dir="rtl">
 
