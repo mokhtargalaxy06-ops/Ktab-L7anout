@@ -41,9 +41,9 @@ function Overview() {
   return <section className="space-y-4">
     <h2 className="display text-3xl">{text.overview}</h2>
     {stats.simulated && <p>{locale === 'fr' ? 'Indicateurs financiers simulés' : 'مؤشرات مالية محاكاة'}</p>}
-    <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {(Object.keys(text.metrics) as (keyof typeof text.metrics)[]).map(key => <Card className="p-4" key={key}>
-        <dt className="text-sm text-muted">{text.metrics[key]}</dt><dd className="text-2xl font-bold">
+        <dt className="text-sm text-muted">{text.metrics[key]}</dt><dd className="text-2xl font-bold [overflow-wrap:anywhere]">
           <bdi>{key === 'donations_minor' ? mad(String(stats[key]), locale) : new Intl.NumberFormat(locale).format(Number(stats[key]))}</bdi>
         </dd>
       </Card>)}
@@ -104,7 +104,7 @@ function Records({ audit = false }: { audit?: boolean }) {
     {notice && <p role="status">{text.returnNotice}</p>}
     {result?.failed ? <p role="alert">{result.status === 404 ? text.financeUnavailable : t.failed}</p>
       : !result?.data ? <p role="status">{t.loading}</p> : !result.data.data.length ? <p>{text.empty}</p> :
-      <div className="overflow-x-auto rounded-xl border border-line bg-white">
+      <div className="relative min-w-0 overflow-x-auto rounded-xl border border-line bg-white" tabIndex={0} role="region" aria-label={audit ? text.audit : text.finance}>
         <table className="w-full text-start text-sm">
           <thead><tr className="bg-mint"><th className="p-3 text-start">{text.reference}</th><th className="p-3 text-start">{audit ? text.action : text.amount}</th>
             <th className="p-3 text-start">{text.date}</th><th className="p-3"><span className="sr-only">{text.detail}</span></th></tr></thead>
@@ -119,7 +119,7 @@ function Records({ audit = false }: { audit?: boolean }) {
       </div>}
     <Pager page={result?.data} change={changePage} />
     <Modal title={text.detail} open={selected !== null} closeLabel={t.close} onClose={() => { if (!busy) select(null) }}>
-      {selected && <dl className="grid grid-cols-[auto_1fr] gap-2 text-sm">{Object.entries(selected).flatMap<[string, unknown]>(([key, value]) =>
+      {selected && <dl className="grid grid-cols-1 gap-x-2 gap-y-1 text-sm sm:grid-cols-[auto_minmax(0,1fr)]">{Object.entries(selected).flatMap<[string, unknown]>(([key, value]) =>
         key === 'changes' && value ? Object.entries(value) : [[key, value]]).filter(([, value]) => value != null)
         .map(([key, value]) => <div key={key} className="contents"><dt>{key.replaceAll('_', ' ')}</dt><dd className="break-all"><bdi>
           {typeof value === 'object' ? JSON.stringify(value) : String(value)}
@@ -182,11 +182,11 @@ export function AdminWorkspace() {
   const { locale } = useLocale()
   const text = adminCopy[locale]
   return <section className="container-shell py-8">
-    <h1 className="display mb-5 text-4xl">{text.title}</h1>
-    <div className="grid min-w-0 gap-5 lg:grid-cols-[13rem_minmax(0,1fr)]">
+    <h1 className="display mb-5 text-3xl sm:text-4xl">{text.title}</h1>
+    <div className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-[13rem_minmax(0,1fr)]">
       <nav aria-label={text.title} className="flex flex-wrap content-start gap-1 rounded-xl border border-line bg-white p-2 lg:flex-col lg:self-start">
         {sections.map(key => <NavLink key={key} end={key === 'overview'} to={workspace + (key === 'overview' ? '' : '/' + key)}
-          className="rounded-lg px-3 py-2 font-semibold hover:bg-mint aria-[current=page]:bg-mint">{text[key]}</NavLink>)}
+          className="inline-flex min-h-11 items-center rounded-lg px-3 py-2 font-semibold hover:bg-mint aria-[current=page]:bg-mint">{text[key]}</NavLink>)}
       </nav>
       <div className="min-w-0"><Routes>
         <Route index element={<Overview />} />

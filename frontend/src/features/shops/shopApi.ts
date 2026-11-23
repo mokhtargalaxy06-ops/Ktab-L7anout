@@ -15,7 +15,7 @@ export type Shop = ShopProfile & {
 }
 export type DebtRequest = { id: string; reference: string; amount_minor: string; status: 'pending' | 'confirmed' | 'disputed'; reason: string | null }
 export type Collection<T> = { data: T[]; meta?: { next_cursor: string | null; prev_cursor: string | null } }
-export const selectClass = 'min-h-11 w-full rounded-lg border border-line bg-white px-3 text-ink disabled:opacity-60'
+export const selectClass = 'min-h-11 w-full min-w-0 rounded-lg border border-line bg-white px-3 text-ink disabled:opacity-60'
 
 export function useResource<T>(path: string | null, revision = 0) {
   const [result, setResult] = useState<{ path: string; revision: number; data?: T; failed?: boolean; status?: number }>()

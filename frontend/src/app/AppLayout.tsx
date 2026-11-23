@@ -1,4 +1,4 @@
-import { Globe2, HeartHandshake } from 'lucide-react'
+import { Globe2, HeartHandshake, Menu, X } from 'lucide-react'
 import { isAxiosError } from 'axios'
 import { useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router'
@@ -25,6 +25,7 @@ export function AppLayout() {
   const { user, setUser } = useSession()
   const [signingOut, setSigningOut] = useState(false)
   const [logoutError, setLogoutError] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   async function logout() {
     setSigningOut(true)
@@ -47,15 +48,21 @@ export function AppLayout() {
   return <div className="flex min-h-screen flex-col">
     <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:start-3 focus:top-3 focus:z-50 focus:rounded focus:bg-white focus:p-3">{t.skip}</a>
     <header className="border-b border-line bg-white">
-      <div className="container-shell flex flex-wrap items-center justify-between gap-x-5 gap-y-1 py-3 lg:grid lg:grid-cols-[1fr_auto_1fr]">
+      <div className="container-shell grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 py-3 md:flex md:flex-wrap md:justify-between xl:grid xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
         <Brand />
-        <nav aria-label={t.menu} className="order-3 flex w-full items-center gap-6 pt-1 text-sm font-semibold text-muted lg:order-0 lg:w-auto lg:pt-0">
-          <NavLink end to="/" className="inline-flex min-h-11 items-center hover:text-forest aria-[current=page]:text-forest">{t.home}</NavLink>
-          <NavLink to="/cases" className="inline-flex min-h-11 items-center hover:text-forest aria-[current=page]:text-forest">{caseCopy[locale].publicLink}</NavLink>
-          <NavLink to="/urgent" className="inline-flex min-h-11 items-center hover:text-forest aria-[current=page]:text-forest">{discoveryCopy[locale].urgentTitle}</NavLink>
-          <Link to="/#approche" className="inline-flex min-h-11 items-center hover:text-forest">{t.approach}</Link>
+        <button type="button" aria-label={t.menu} aria-expanded={menuOpen} aria-controls="primary-navigation"
+          onClick={() => setMenuOpen(open => !open)}
+          className="grid size-11 place-items-center rounded-lg border border-line text-forest md:hidden">
+          {menuOpen ? <X aria-hidden="true" size={22} /> : <Menu aria-hidden="true" size={22} />}
+        </button>
+        <nav id="primary-navigation" aria-label={t.menu}
+          className={`order-3 col-span-2 grid-cols-2 gap-x-3 border-t border-line pt-1 text-sm font-semibold text-muted md:flex md:w-full md:flex-wrap md:gap-x-6 xl:order-0 xl:w-auto xl:border-0 xl:pt-0 ${menuOpen ? 'grid' : 'hidden'}`}>
+          <NavLink end to="/" onClick={() => setMenuOpen(false)} className="inline-flex min-h-11 items-center hover:text-forest aria-[current=page]:text-forest">{t.home}</NavLink>
+          <NavLink to="/cases" onClick={() => setMenuOpen(false)} className="inline-flex min-h-11 items-center hover:text-forest aria-[current=page]:text-forest">{caseCopy[locale].publicLink}</NavLink>
+          <NavLink to="/urgent" onClick={() => setMenuOpen(false)} className="inline-flex min-h-11 items-center hover:text-forest aria-[current=page]:text-forest">{discoveryCopy[locale].urgentTitle}</NavLink>
+          <Link to="/#approche" onClick={() => setMenuOpen(false)} className="inline-flex min-h-11 items-center hover:text-forest">{t.approach}</Link>
         </nav>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3 lg:justify-end">
+        <div className="col-span-2 flex min-w-0 flex-wrap items-center gap-2 sm:gap-3 xl:col-span-1 xl:justify-end">
           <button type="button" aria-label={t.language} onClick={() => setLocale(locale === 'fr' ? 'ar' : 'fr')}
             className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-forest hover:bg-mint">
             <Globe2 aria-hidden="true" size={17} /><span lang={locale === 'fr' ? 'ar' : 'fr'}>{locale === 'fr' ? 'العربية' : 'Français'}</span>

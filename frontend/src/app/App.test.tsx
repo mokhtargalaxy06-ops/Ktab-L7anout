@@ -21,6 +21,17 @@ beforeEach(() => {
 })
 
 describe('foundation routes', () => {
+  it('closes the mobile navigation after following a link', async () => {
+    open('/')
+    const toggle = screen.getByRole('button', { name: 'Menu' })
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    await userEvent.click(toggle)
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    const navigation = screen.getByRole('navigation', { name: 'Menu' })
+    await userEvent.click(within(navigation).getByRole('link', { name: 'Dossiers publiés' }))
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+  })
+
   it('starts in French and switches to Arabic with RTL', async () => {
     open('/')
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('La solidarité commence')

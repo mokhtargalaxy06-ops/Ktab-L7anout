@@ -14,10 +14,10 @@ export function Modal({ open, title, closeLabel, onClose, children }: Props) {
   }, [open])
 
   return <dialog ref={ref} aria-labelledby={titleId} onCancel={event => { event.preventDefault(); onClose() }}
-    className="m-auto w-[calc(100%-2rem)] max-w-lg rounded-2xl bg-white p-6 text-ink shadow-xl backdrop:bg-black/45">
+    className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg overflow-y-auto rounded-2xl bg-white p-4 text-ink shadow-xl backdrop:bg-black/45 sm:p-6">
     <div className="mb-4 flex items-center justify-between gap-4">
       <h2 id={titleId} className="text-xl font-semibold">{title}</h2>
-      <button type="button" aria-label={closeLabel} onClick={onClose} className="grid size-11 place-items-center rounded-lg hover:bg-mint">
+      <button type="button" aria-label={closeLabel} onClick={onClose} className="grid size-11 shrink-0 place-items-center rounded-lg hover:bg-mint">
         <X aria-hidden="true" size={20} />
       </button>
     </div>

@@ -4,6 +4,7 @@
 
 ## Correctifs récents
 
+- **Interface adaptée aux petits écrans.** Le menu se replie sur mobile, les formulaires s’ajustent à la largeur disponible, les fenêtres de dialogue défilent verticalement et les tableaux administratifs défilent dans leur propre zone. Treize écrans ont été vérifiés dans Chrome en français et en arabe, à cinq largeurs de 320 à 1 440 px.
 - **Chiffres d’impact.** L’accueil distingue les dons simulés reçus et affectés des paiements hors plateforme confirmés par les épiciers. Une famille est comptée dès qu’une partie de sa dette a effectivement été réglée et confirmée, et elle n’est comptée qu’une fois. Le compteur des dossiers entièrement réglés évolue lorsque la dette est intégralement payée. [Correctif des chiffres d’impact](https://github.com/mokhtargalaxy06-ops/Ktab-L7anout/commit/451901e02e33c87ebaee8a66d793b269c0c7f6d7)
 - **Progression du dossier.** Une dette de 300 MAD dont l’épicier a confirmé avoir reçu 250 MAD hors plateforme affiche 250 MAD reçus, 50 MAD restants et 83 % de progression.
 - **Suivi de la contribution.** La promesse WhatsApp laisse le solde inchangé. L’épicier confirme le montant reçu avec un justificatif, ce qui réduit le solde. Le donateur retrouve la confirmation et le montant dans le détail de sa contribution.
@@ -11,7 +12,11 @@
 
 **English.** The homepage now separates simulated donations from shop-confirmed external payments. It counts each family once as soon as part of its debt has been paid and confirmed. Case pages show what the shop received and what remains. A WhatsApp pledge leaves the balance unchanged until the shop confirms receipt with evidence. Donors can track the confirmation in their contribution details. Debt confirmation displays amounts in dirhams, and duplicate approval errors identify the conflict.
 
+**Responsive layout.** The mobile menu collapses, forms fit smaller screens, dialogs scroll vertically, and administrator tables scroll within their containers. Thirteen screens were checked in Chrome in French and Arabic at five widths from 320 to 1,440 px.
+
 <div dir="rtl">
+
+**الشاشات الصغيرة.** تُطوى قائمة التنقّل على الهاتف، وتتكيف النماذج مع عرض الشاشة، ويمكن تمرير النوافذ الحوارية عمودياً والجداول الإدارية أفقياً داخل مساحتها. جرى التحقق من 13 شاشة في Chrome بالعربية والفرنسية على خمسة مقاسات من 320 إلى 1440 بكسل.
 
 **بالعربية.** تفصل الصفحة الرئيسية بين التبرعات المحاكية والمدفوعات خارج المنصة التي أكّد البقالون استلامها. تُحتسب كل أسرة مرة واحدة بمجرد تسديد جزء من دينها وتأكيده. يوضح الملف المبلغ المستلم والرصيد المتبقي. يظل الرصيد كما هو عند تسجيل وعد عبر واتساب، وينخفض عندما يؤكد البقال الاستلام ويرفق الإثبات. يظهر التأكيد والمبلغ في تفاصيل مساهمة المتبرع. ويعرض نموذج تأكيد الدين المبالغ بالدرهم، وتوضح رسالة الخطأ سبب تعذّر اعتماد ملف مكرر.
 

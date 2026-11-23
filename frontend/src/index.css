@@ -17,8 +17,12 @@
 }
 
 .container-shell {
-  width: min(100% - 2.5rem, 76rem);
+  width: min(100% - clamp(1.5rem, 5vw, 2.5rem), 76rem);
   margin-inline: auto;
+}
+
+.container-shell > * {
+  min-inline-size: 0;
 }
 
 .display {
