@@ -34,17 +34,21 @@ class PublicDiscovery
         return $policy;
     }
 
-    public function catalog(array $filters = []): Builder
+    private function externalPayments(): Builder
     {
-        $external = DB::table('external_debt_payments as e')->join('donations as pledge', 'pledge.id', '=', 'e.donation_id')
+        return DB::table('external_debt_payments as e')->join('donations as pledge', 'pledge.id', '=', 'e.donation_id')
             ->where('e.status', 'approved')->groupBy('pledge.debt_case_id')
             ->select('pledge.debt_case_id')->selectRaw('SUM(e.amount_minor) AS paid_minor');
+    }
+
+    public function catalog(array $filters = []): Builder
+    {
         $query = DB::table('debt_cases as c')
             ->join('shops as s', 's.id', '=', 'c.shop_id')
             ->join('cities as city', 'city.id', '=', 'c.city_id')
             ->join('regions as region', 'region.id', '=', 'city.region_id')
             ->leftJoinSub($this->validFunding(), 'funding', 'funding.debt_case_id', '=', 'c.id')
-            ->leftJoinSub($external, 'external', 'external.debt_case_id', '=', 'c.id')
+            ->leftJoinSub($this->externalPayments(), 'external', 'external.debt_case_id', '=', 'c.id')
             ->where(fn (Builder $query) => $query->whereNotNull('funding.debt_case_id')
                 ->orWhereNotExists(fn (Builder $report) => $report->selectRaw('1')->from('case_funding_reports')
                     ->whereColumn('case_funding_reports.debt_case_id', 'c.id')
@@ -59,6 +63,7 @@ class PublicDiscovery
                 'c.vulnerability_grade', 'c.access_risk_grade', 'c.revision',
                 'city.name_fr as city_fr', 'city.name_ar as city_ar', 'region.name_fr as region_fr', 'region.name_ar as region_ar',
             ])->selectRaw('c.approved_minor + COALESCE(external.paid_minor, 0) AS approved_minor')
+            ->selectRaw('COALESCE(external.paid_minor, 0) AS external_paid_minor')
             ->selectRaw('COALESCE(funding.allocated_minor, 0) + COALESCE(external.paid_minor, 0) AS collected_minor')
             ->selectRaw('COALESCE(funding.settled_minor, 0) + COALESCE(external.paid_minor, 0) AS settled_minor')
             ->selectRaw('funding.updated_at as funding_updated_at');
@@ -125,9 +130,12 @@ class PublicDiscovery
 
     public function statistics(): array
     {
-        $totals = DB::query()->fromSub($this->validFunding(), 'funding')->join('debt_cases as c', 'c.id', '=', 'funding.debt_case_id')
-            ->selectRaw('COUNT(DISTINCT CASE WHEN funding.settled_minor > 0 THEN c.beneficiary_profile_id END) AS families_helped')
-            ->selectRaw('COUNT(CASE WHEN c.approved_minor > 0 AND funding.settled_minor >= c.approved_minor THEN 1 END) AS fully_settled_cases')
+        $totals = DB::table('debt_cases as c')
+            ->leftJoinSub($this->validFunding(), 'funding', 'funding.debt_case_id', '=', 'c.id')
+            ->leftJoinSub($this->externalPayments(), 'external', 'external.debt_case_id', '=', 'c.id')
+            ->selectRaw('COUNT(DISTINCT CASE WHEN COALESCE(funding.settled_minor, 0) + COALESCE(external.paid_minor, 0) > 0 THEN c.beneficiary_profile_id END) AS families_helped')
+            ->selectRaw('COUNT(CASE WHEN c.approved_minor + COALESCE(external.paid_minor, 0) > 0 AND COALESCE(funding.settled_minor, 0) >= c.approved_minor THEN 1 END) AS fully_settled_cases')
+            ->selectRaw('COALESCE(SUM(external.paid_minor), 0) AS external_paid_minor')
             ->selectRaw('COALESCE(SUM(funding.settled_minor), 0) AS settled_minor, COALESCE(SUM(funding.allocated_minor), 0) AS allocated_minor')
             ->first();
         $received = DB::table('funding_receipt_reports')->where('simulated', SimulatedProvider::enabled())->where('received_minor', '>', 0)
@@ -139,6 +147,7 @@ class PublicDiscovery
             'settled_minor' => (string) $totals->settled_minor,
             'allocated_minor' => (string) $totals->allocated_minor,
             'received_minor' => (string) $received->total,
+            'external_paid_minor' => (string) $totals->external_paid_minor,
             'currency' => 'MAD',
         ];
     }

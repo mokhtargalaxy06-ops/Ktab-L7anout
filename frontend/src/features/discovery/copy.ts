@@ -1,9 +1,11 @@
 export const discoveryCopy = {
   fr: {
     browse: 'Explorer les dossiers', urgentTitle: 'Dossiers urgents', recent: 'Derniers dossiers publiés',
-    impact: 'Notre impact en chiffres', helped: 'Familles aidées', settledTotal: 'Dettes alimentaires réglées',
+    impact: 'Notre impact en chiffres', helped: 'Familles aidées', settledTotal: 'Montant réglé sur les dettes alimentaires',
     settledCases: 'Dossiers intégralement réglés',
     received: 'Dons reçus', allocated: 'Dons affectés',
+    simulatedReceived: 'Dons simulés reçus', simulatedAllocated: 'Dons simulés affectés',
+    externalTotal: 'Paiements hors plateforme confirmés', shopReceived: 'Reçu par l’épicier hors plateforme', progress: 'Progression du financement',
     transparency: 'La transparence à chaque étape', transparencyText: 'Les chiffres reflètent les fonds confirmés, affectés ou réglés. Les règlements sont destinés aux épiceries vérifiées et documentés.',
     empty: 'Aucun dossier ne correspond à cette recherche.', retry: 'Réessayer', apply: 'Appliquer les filtres', reset: 'Réinitialiser',
     search: 'Référence, ville ou région', minimum: 'Dette minimale (MAD)', maximum: 'Dette maximale (MAD)',
@@ -27,9 +29,11 @@ export const discoveryCopy = {
   },
   ar: {
     browse: 'تصفح الملفات', urgentTitle: 'الملفات العاجلة', recent: 'آخر الملفات المنشورة',
-    impact: 'أثرنا بالأرقام', helped: 'الأسر المستفيدة', settledTotal: 'الديون الغذائية المسددة',
+    impact: 'أثرنا بالأرقام', helped: 'الأسر المستفيدة', settledTotal: 'المبلغ المسدد من الديون الغذائية',
     settledCases: 'الملفات المسددة بالكامل',
     received: 'التبرعات المستلمة', allocated: 'التبرعات المخصصة',
+    simulatedReceived: 'التبرعات المستلمة بالمحاكاة', simulatedAllocated: 'التبرعات المخصصة بالمحاكاة',
+    externalTotal: 'المدفوعات المؤكدة خارج المنصة', shopReceived: 'استلمه البقال خارج المنصة', progress: 'تقدّم التمويل',
     transparency: 'الشفافية في كل مرحلة', transparencyText: 'تعكس الأرقام المبالغ المؤكدة أو المخصصة أو المسددة. تُصرف التسويات للبقالات التي تم التحقق منها وتُوثق.',
     empty: 'لا توجد ملفات مطابقة لهذا البحث.', retry: 'إعادة المحاولة', apply: 'تطبيق المرشحات', reset: 'إعادة الضبط',
     search: 'المرجع أو المدينة أو الجهة', minimum: 'الحد الأدنى للدين (درهم)', maximum: 'الحد الأقصى للدين (درهم)',

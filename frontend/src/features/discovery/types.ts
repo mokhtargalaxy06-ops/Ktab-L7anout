@@ -9,6 +9,7 @@ export type PublicCase = {
   story: Story
   amount_minor: string
   collected_minor: string
+  external_paid_minor?: string
   remaining_minor: string
   status: 'open' | 'funded' | 'settled'
   progress: number
@@ -26,13 +27,13 @@ export type UrgencyPolicy = {
 }
 export type Discovery = {
   simulated?: boolean
-  statistics: { families_helped: number; fully_settled_cases: number; settled_minor: string; allocated_minor: string; received_minor: string; currency: 'MAD' }
+  statistics: { families_helped: number; fully_settled_cases: number; settled_minor: string; allocated_minor: string; received_minor: string; external_paid_minor?: string; currency: 'MAD' }
   recent: PublicCase[]
   urgent: PublicCase[]
   urgency_policy: UrgencyPolicy
 }
 
-export function mad(minor: string | number, locale: Locale) {
+export function mad(minor: string | number | bigint, locale: Locale) {
   const value = BigInt(minor)
   const language = locale === 'ar' ? 'ar-MA' : 'fr-MA'
   const formatter = new Intl.NumberFormat(language, { style: 'currency', currency: 'MAD', minimumFractionDigits: 2 })

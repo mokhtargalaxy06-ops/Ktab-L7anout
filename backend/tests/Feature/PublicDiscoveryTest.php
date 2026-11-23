@@ -93,7 +93,7 @@ class PublicDiscoveryTest extends TestCase
     public function test_statistics_aggregate_real_records_and_count_each_helped_family_once(): void
     {
         $this->getJson('/api/v1/discovery')->assertJsonPath('data.statistics', [
-            'families_helped' => 0, 'fully_settled_cases' => 0, 'settled_minor' => '0', 'allocated_minor' => '0', 'received_minor' => '0', 'currency' => 'MAD',
+            'families_helped' => 0, 'fully_settled_cases' => 0, 'settled_minor' => '0', 'allocated_minor' => '0', 'received_minor' => '0', 'external_paid_minor' => '0', 'currency' => 'MAD',
         ]);
         $shop = $this->shop('Agadir', 'أكادير');
         $first = $this->debt($shop, 45000);
@@ -107,7 +107,7 @@ class PublicDiscoveryTest extends TestCase
         DB::table('funding_receipt_reports')->insert(['receipt_id' => (string) Str::uuid(), 'received_minor' => 85000]);
 
         $this->getJson('/api/v1/discovery')->assertJsonPath('data.statistics', [
-            'families_helped' => 1, 'fully_settled_cases' => 1, 'settled_minor' => '57000', 'allocated_minor' => '75000', 'received_minor' => '85000', 'currency' => 'MAD',
+            'families_helped' => 1, 'fully_settled_cases' => 1, 'settled_minor' => '57000', 'allocated_minor' => '75000', 'received_minor' => '85000', 'external_paid_minor' => '0', 'currency' => 'MAD',
         ]);
     }
 

@@ -20,6 +20,7 @@ class PublicDebtCaseResource extends JsonResource
             'story' => $record->public_story,
             'amount_minor' => (string) $record->approved_minor,
             'collected_minor' => (string) $record->collected_minor,
+            'external_paid_minor' => (string) $record->external_paid_minor,
             'remaining_minor' => (string) $record->remaining_minor,
             'status' => $record->remaining_minor > 0 ? 'open' : ((int) $record->settled_minor === (int) $record->approved_minor ? 'settled' : 'funded'),
             'progress' => intdiv((int) $record->collected_minor * 100, (int) $record->approved_minor),

@@ -48,7 +48,11 @@ class DonationFundingTest extends TestCase
         $this->post($shopPath, $input, ['Accept' => 'application/json'])->assertCreated();
         $this->post($shopPath, $input, ['Accept' => 'application/json'])->assertConflict();
         $this->get($adminPath.'/evidence')->assertForbidden();
-        $this->getJson($casePath)->assertJsonPath('data.remaining_minor', '0')->assertJsonPath('data.status', 'settled');
+        $this->getJson($casePath)->assertJsonPath('data.remaining_minor', '0')->assertJsonPath('data.status', 'settled')
+            ->assertJsonPath('data.external_paid_minor', '3500');
+        $this->getJson('/api/v1/discovery')->assertJsonPath('data.statistics.external_paid_minor', '3500')
+            ->assertJsonPath('data.statistics.allocated_minor', '0')->assertJsonPath('data.statistics.received_minor', '0')
+            ->assertJsonPath('data.statistics.families_helped', 1)->assertJsonPath('data.statistics.fully_settled_cases', 1);
         $this->assertDatabaseHas('audit_logs', ['target_id' => $id, 'actor_id' => $owner->id, 'action' => 'external_debt_payment.confirmed_by_shop']);
         $this->actAs('administrator');
         $this->get($adminPath.'/evidence')->assertOk();

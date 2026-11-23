@@ -8,13 +8,19 @@ import { mad, type PublicCase, type UrgencyPolicy } from './types'
 export function FundingMeter({ record }: { record: PublicCase }) {
   const { locale } = useLocale()
   const text = discoveryCopy[locale]
+  const external = BigInt(record.external_paid_minor ?? '0')
+  const allocated = BigInt(record.collected_minor) - external
 
   return <div className="grid gap-2">
     <div className="flex items-center justify-between gap-2 text-sm">
-      <span>{text.collected} <bdi className="font-semibold">{mad(record.collected_minor, locale)}</bdi></span>
+      <div className="grid gap-1">
+        {external > 0n && <span>{text.shopReceived} <bdi className="font-semibold">{mad(external, locale)}</bdi></span>}
+        {(allocated > 0n || external === 0n) && <span>{text.collected} <bdi className="font-semibold">{mad(allocated, locale)}</bdi></span>}
+        <span>{text.remaining} <bdi className="font-semibold">{mad(record.remaining_minor, locale)}</bdi></span>
+      </div>
       <span className="font-bold"><bdi>{record.progress}%</bdi></span>
     </div>
-    <progress value={record.progress} max={100} aria-label={text.collected} className="h-2 w-full appearance-none overflow-hidden rounded-full accent-forest [&::-webkit-progress-bar]:bg-mint [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-forest" />
+    <progress value={record.progress} max={100} aria-label={text.progress} className="h-2 w-full appearance-none overflow-hidden rounded-full accent-forest [&::-webkit-progress-bar]:bg-mint [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-forest" />
   </div>
 }
 

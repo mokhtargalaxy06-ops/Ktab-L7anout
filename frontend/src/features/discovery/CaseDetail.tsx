@@ -82,7 +82,6 @@ export function CaseDetail() {
             <h2 className="display text-2xl">{text.debt}</h2>
             <p className="text-3xl font-bold text-forest"><bdi>{mad(record.amount_minor, locale)}</bdi></p>
             <FundingMeter record={record} />
-            <p>{text.remaining} <bdi className="font-semibold">{mad(record.remaining_minor, locale)}</bdi></p>
             {record.simulated ? <>
               <p className="text-sm text-amber-900">{donationCopy[locale].banner}</p>
               {record.remaining_minor !== '0' && <div><ButtonLink to={'/donations/new?case=' + record.id}>{donationCopy[locale].donate}</ButtonLink></div>}

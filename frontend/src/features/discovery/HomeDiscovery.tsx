@@ -38,12 +38,13 @@ export function HomeDiscovery() {
           <ButtonLink to="/donations/new">{donationCopy[locale].donate}</ButtonLink>
         </div>}
         {result?.failed ? <div role="alert">{t.failed} <Button onClick={() => setRetry(value => value + 1)}>{text.retry}</Button></div>
-          : !data?.statistics ? <Loading label={t.loading} /> : <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          : !data?.statistics ? <Loading label={t.loading} /> : <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {([
               [text.helped, new Intl.NumberFormat(locale === 'ar' ? 'ar-MA' : 'fr-MA').format(data.statistics.families_helped), HandHeart],
-              [text.settledTotal, mad(data.statistics.settled_minor, locale), ReceiptText],
-              [text.received, mad(data.statistics.received_minor, locale), WalletCards],
-              [text.allocated, mad(data.statistics.allocated_minor, locale), ShieldCheck],
+              [text.settledTotal, mad(BigInt(data.statistics.settled_minor) + BigInt(data.statistics.external_paid_minor ?? '0'), locale), ReceiptText],
+              [data.simulated ? text.simulatedReceived : text.received, mad(data.statistics.received_minor, locale), WalletCards],
+              [data.simulated ? text.simulatedAllocated : text.allocated, mad(data.statistics.allocated_minor, locale), ShieldCheck],
+              [text.externalTotal, mad(data.statistics.external_paid_minor ?? '0', locale), ReceiptText],
             ] as const).map(([label, value, Icon]) => <div key={label} className="grid content-start gap-2 rounded-xl border border-line bg-white p-5">
               <Icon aria-hidden="true" size={22} className="text-forest" />
               <dt className="text-sm font-semibold text-muted">{label}</dt>
