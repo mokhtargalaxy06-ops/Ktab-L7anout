@@ -29,6 +29,10 @@ For questions about Ktab-L7anout or to discuss a collaboration, email Mokhtar So
 
 [LinkedIn — Mokhtar Soumair](https://www.linkedin.com/in/mokhtar-soumair-4b8855394/)
 
+## Contribuer au projet
+
+Consultez le [guide de contribution](CONTRIBUTING.md) pour proposer une modification ou ouvrir une pull request. Pour signaler un problème ou proposer une amélioration, choisissez un modèle dans les [issues GitHub](https://github.com/mokhtargalaxy06-ops/Ktab-L7anout/issues/new/choose). Les contributions sont les bienvenues en français, en arabe et en anglais.
+
 ## Soutenir le projet
 
 Vous souhaitez aider **Ktab-L7anout** à ouvrir au public ? Vous pouvez soutenir le projet par virement bancaire. Votre contribution aide à couvrir le développement, les tests et l’hébergement. Le virement est versé sur le compte personnel du porteur du projet pour soutenir son lancement. Les contributions destinées à régler une dette suivent le parcours du dossier sur la plateforme.
