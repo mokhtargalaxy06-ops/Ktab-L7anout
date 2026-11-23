@@ -2,6 +2,12 @@
 
 [العربية](#ما-هو-مشروع-ktab-l7anout) · [Français](#guide-en-français) · [English](#english-guide) · [لقطات الواجهة](#لقطات-الواجهة-العربية) · [Soutenir le projet](#soutenir-le-projet) · [Installation](#local-setup)
 
+## معاينة الواجهة العربية
+
+![الصفحة الرئيسية لمشروع Ktab-L7anout باللغة العربية](docs/screenshots/ar/accueil.jpg)
+
+[شاهد جميع لقطات الواجهة العربية](#لقطات-الواجهة-العربية) · [Toutes les captures](docs/screenshots/ar) · [All screenshots](docs/screenshots/ar)
+
 ## Soutenir le projet
 
 Vous souhaitez aider **Ktab-L7anout** à ouvrir au public ? Vous pouvez soutenir le projet par virement bancaire. Votre contribution aide à couvrir le développement, les tests et l’hébergement. Le virement est versé sur le compte personnel du porteur du projet pour soutenir son lancement. Les contributions destinées à régler une dette suivent le parcours du dossier sur la plateforme.
