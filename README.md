@@ -1,6 +1,16 @@
-# [Ktab-L7anout](https://github.com/mokhtarsoumair399-collab/Ktab-L7anout)
+# [Ktab-L7anout](https://github.com/mokhtargalaxy06-ops/Ktab-L7anout)
 
-[العربية](#ما-هو-مشروع-ktab-l7anout) · [Français](#guide-en-français) · [English](#english-guide) · [لقطات الواجهة](#لقطات-الواجهة-العربية) · [Soutenir le projet](#soutenir-le-projet) · [Installation](#local-setup)
+[العربية](#ما-هو-مشروع-ktab-l7anout) · [Français](#guide-en-français) · [English](#english-guide) · [لقطات الواجهة](#لقطات-الواجهة-العربية) · [Contact](#contact) · [Soutenir le projet](#soutenir-le-projet) · [Installation](#local-setup)
+
+## Contact
+
+Pour toute question sur Ktab-L7anout ou pour proposer une collaboration, écrivez à Mokhtar Soumair.
+
+For questions about Ktab-L7anout or to discuss a collaboration, email Mokhtar Soumair.
+
+للاستفسار عن المشروع أو اقتراح تعاون، راسل مختار سومير.
+
+[mokhtargalaxy06@gmail.com](mailto:mokhtargalaxy06@gmail.com)
 
 ## Soutenir le projet
 
